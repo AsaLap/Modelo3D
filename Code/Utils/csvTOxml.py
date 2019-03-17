@@ -11,8 +11,8 @@
 
 import csv
 
-csvFile = 'myData.csv'
-xmlFile = 'myData.xml'
+csvFile = '../../Resources/essaiCoordonnees.csv' #Path to CSV file
+xmlFile = '../../Resources/essaiCoordonnees.xml' #Path to new XML file
 
 csvData = csv.reader(open(csvFile))
 xmlData = open(xmlFile, 'w')
