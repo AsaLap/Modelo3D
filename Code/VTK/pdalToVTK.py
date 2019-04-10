@@ -32,7 +32,6 @@ profile.SetPoints(points)
 
 delny = vtkDelaunay2D()
 delny.SetInputData(profile)
-delny.SetTolerance(0.01)
 
 mapMesh = vtkPolyDataMapper()
 mapMesh.SetInputConnection(delny.GetOutputPort())
