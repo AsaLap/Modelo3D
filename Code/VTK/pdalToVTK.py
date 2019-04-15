@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#pour transformer des fichiers en csv : 
+#pour transformer des fichiers en csv :
 #import pdal (à installer avec anaconda/miniconda, ne marche pas avec pip)
 #pdal translate -i <fichierAImporter> -o <output.csv>
 
@@ -9,30 +9,31 @@
 from vtk import *
 import csv
 import time
- 
+
 
 beginning = time.time()
+start = beginning
 
-def importCSV(filename, delimiter) :
+def importCSV(filename, delimiter, modulo) :
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
-        print ("import du fichier")
+        print ("Import du fichier")
         i = 0
         j=0
         for row in reader:
-            if (i != 0 and i%1000==0) : #pour ne pas prendre en compte le header
+            if (i != 0 and i%modulo==0) : #pour ne pas prendre en compte le header
                     points.InsertNextPoint(int(float(row[0])),int(float(row[1])), int(float(row[2])))
                     j=j+1
             i = i+1
-    print ("nombre de points importés  : ",j)
+    print ("Nombre de points importés  : ",j)
     return points
 
 def importLidarCSV(filename, delimiter) :
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
-        print ("import du fichier")
+        print ("Import du fichier")
         i = 0
         j=0
         for row in reader:
@@ -40,7 +41,7 @@ def importLidarCSV(filename, delimiter) :
                     points.InsertNextPoint(int(float(row[0])),int(float(row[1])), int(float(row[2])))
                     j=j+1
             i = i+1
-    print ("nombre de points importés  : ",j)
+    print ("Nombre de points importés  : ",j)
     return points
 
 #triangulation
@@ -79,9 +80,8 @@ def rendering(meshActor) :
 
     iren.Initialize()
     renWin.Render()
-    iren.Start()
+    # iren.Start()
     return renWin
-
 
 #export au format OBJ
 def exportOBJ(renWin) :
@@ -90,20 +90,21 @@ def exportOBJ(renWin) :
     obj.SetRenderWindow(renWin)
     obj.Write()
 
-
-fichier = importCSV("essai.csv",",") # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
-print ("import : ", time.time() -beginning)
+modulo = 1000000
+print("Modulo : ",modulo)
+fichier = importCSV("essai.csv",",",modulo) # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
+print ("Import : ", time.time() -beginning)
 beginning = time.time()
 delny = delaunay2D(fichier)
-print ("delny : ", time.time() -beginning)
+print ("Triangulation de Delaunay : ", time.time() -beginning)
 beginning = time.time()
 mapped = mapping(delny)
-print ("mapping : ", time.time() -beginning)
+print ("Mapping : ", time.time() -beginning)
 beginning = time.time()
 rendered = rendering(mapped)
-print ("rendering : ", time.time() -beginning)
+print ("Rendering : ", time.time() -beginning)
 beginning = time.time()
 exportOBJ(rendered)
-print ("écriture obj : ", time.time() -beginning)
+print ("Ecriture obj : ", time.time() -beginning)
 beginning = time.time()
-
+print ("Temps total : ",time.time()-start)
