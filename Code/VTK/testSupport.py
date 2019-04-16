@@ -1,61 +1,131 @@
+#!/usr/bin/python
+
+#pour transformer des fichiers en csv :
+#import pdal (à installer avec anaconda/miniconda, ne marche pas avec pip)
+#pdal translate -i <fichierAImporter> -o <output.csv>
+
+# FICHIERS ISSUS D'UN LIDAR : utiliser importLidarCSV() et pas importCSV()
+
 from vtk import *
+import csv
+import time
 
-i= 0
-j=0
-k=-12
 
-points = []
+beginning = time.time()
+start = beginning
 
-while i < 10 :
-    while j < 10 :
-        point = []
-        point.append(i)
-        point.append(j)
-        point.append(k)
-        points.append(point)
-        j=j+1
-        k=k+1
-    j = 0
-    i = i+1
-def support()
-    zMin = 1000000
-    xMin = 1000000
-    yMin = 1000000
-    xMax = -1000000
-    yMax = -1000000
+def importCSV(filename, delimiter, modulo) :
+    points = vtkPoints()
+    with open(filename, 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
+        print ("Import du fichier")
+        i = 0
+        j=0
+        for row in reader:
+            if (i != 0 and i%modulo==0) : #pour ne pas prendre en compte le header
+                    points.InsertNextPoint(int(float(row[0])),int(float(row[1])), int(float(row[2])))
+                    j=j+1
+            i = i+1
+    print ("Nombre de points importés  : ",j)
+    return points
 
-    for point in points :
-        if point[2] < zMin :
-            zMin = point[2]
-        if point[0] <xMin :
-            xMin = point[0]
-            xMiny = point[1]
-        if point[0] > xMax :
-            xMax = point[0]
-            xMaxy = point[1]
-        if point[1] <yMin :
-            yMin = point[1]
-            yMinx = point[0]
-        if point[1] > yMax :
-            yMax = point[1]
-            yMaxx = point[0]
-    res = [zMin, xMin, yMin, xMiny, xMaxy, yMin, yMinx, yMax, yMaxx]
-    return res
-bord1 = []
-bord2 = []
-bord3 = []
-bord4 = []
-for point in points :
-    if point[1] >= xMiny and point[1] <= xMaxy :
-        bord1.append(point)
-    if point[0] >= yMinx and point[0] <= yMaxx :
-        bord2.append(point)
-    if point[0] >= xMin and point[0]<= yMinx:
-        if point[1]>=yMin and point[1]<=xMiny:
-            bord3.append(point)
-    if point[0]<=xMax and point[0]>=yMaxx :
-        if point[1]<=yMax and point[1]>=xMaxy:
-            bord4.append(point)
+def importLidarCSV(filename, delimiter) :
+    points = vtkPoints()
+    with open(filename, 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
+        print ("Import du fichier")
+        i = 0
+        j=0
+        for row in reader:
+            if (i != 0 and row[8]=='2000') : #row[8] est la catégorie des points, 2.000 correspond au sol
+                    points.InsertNextPoint(int(float(row[0])),int(float(row[1])), int(float(row[2])))
+                    j=j+1
+            i = i+1
+    print ("Nombre de points importés  : ",j)
+    return points
 
-print (bord4)
+#triangulation
+def support(delny, points) :
+    edges = vtkFeatureEdges()
+    edges.SetInputConnection(delny.GetOutputPort())
+    print (edges.GetOutput())
+    bounds = points.GetBounds()
+    print (bounds)
+    return edges
 
+def delaunay2D(points) :
+    profile = vtkPolyData()
+    profile.SetPoints(points)
+    delny = vtkDelaunay2D()
+    delny.SetInputData(profile)
+    return delny
+
+def volumeMapping(delny) :
+    volumeMapper = vtkGPUVolumeRayCastMapper()
+    volumeMapper.SetBlendModeToComposite()
+    volumeMapper.SetInputConnection(delny.GetOutputPort())
+    volume = vtkVolume()
+    volume.SetMapper(volumeMapper)
+    return volume
+
+def mapping(delny) :
+    mapMesh = vtkPolyDataMapper()
+    mapMesh.SetInputConnection(delny.GetOutputPort())
+    meshActor = vtkActor()
+    meshActor.SetMapper(mapMesh)
+    meshActor.GetProperty().SetColor(.1, .2, .4)
+    return meshActor
+
+#rendering
+def volumeRendering(volume) :
+    ren = vtkRenderer()
+    renwin = vtkRenderWindow()
+    ren.AddVolume(volume)
+    ren.SetBackground(1, 1, 1)
+    renwin.SetSize(600, 600)
+    renwin.Render()
+    iren = vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renwin)
+    cam1 = ren.GetActiveCamera()
+    cam1.Zoom(1.5)
+    iren.Initialize()
+    renwin.Render()
+    iren.Start()
+    return renwin
+
+def rendering(meshActor) :
+    ren = vtkRenderer()
+    renWin = vtkRenderWindow()
+    renWin.AddRenderer(ren)
+    iren = vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renWin)
+
+    # Add the actors to the renderer, set the background and size
+    ren.AddActor(meshActor)
+    ren.SetBackground(1, 1, 1)
+    renWin.SetSize(250, 250)
+    renWin.Render()
+    cam1 = ren.GetActiveCamera()
+    cam1.Zoom(1.5)
+
+    iren.Initialize()
+    renWin.Render()
+    # iren.Start()
+    return renWin
+
+#export au format OBJ
+def exportOBJ(renWin) :
+    obj = vtkOBJExporter()
+    obj.SetFilePrefix("essai")
+    obj.SetRenderWindow(renWin)
+    obj.Write()
+
+modulo = 10000
+print("Modulo : ",modulo)
+fichier = importCSV("essai.csv",",",modulo) # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
+print ("Import : ", time.time() -beginning)
+beginning = time.time()
+delny = delaunay2D(fichier)
+support = support(delny, fichier)
+mapped = mapping(support)
+rendered = rendering(mapped)
