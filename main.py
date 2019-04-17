@@ -1,21 +1,41 @@
+#coding : utf-8
 #Fichier principal du projet Modelo3D
 
 import BDDconnexion
-import LAStoVTK
-import OBJtoVTK
-import pdalToVTK
+# import OBJtoVTK
+import PDALtoVTK
 
 def menu():
-    choix = [
-        'Ajouter un fichier source pour le traiter',
-        'Ajouter un fichier source pour l\'enregistrer dans le base de données'',
-        'Effectuer un traitement sur un fichier existant sur la base de données',
-        'Visualiser un maillage pré-traité',
-        'Récupérer un fichier au format OBJ (post-traitement)',
-        'Faire une requête libre sur la base de données (dev)'
-        ]
-    choix = int(input(
-    "Que souhaitez-vous faire :\n1 : Faire une requête sur la base de données (PostgreSQL)\n2 : "))
+    GoOn = True
+    while (GoOn):
+        choix = [
+            'Ajouter un fichier source pour le traiter',
+            'Ajouter un fichier source pour l\'enregistrer dans le base de données',
+            'Effectuer un traitement sur un fichier existant sur la base de données',
+            'Visualiser un maillage pré-traité',
+            'Récupérer un fichier au format OBJ (post-traitement)',
+            'Faire une requête libre sur la base de données (dev)',
+            'Quitter'
+            ]
+        for i in range(len(choix)):
+            print(str(i+1) + " : " + choix[i])
+        choix = int(input())
+        if (choix == 1):
+            addFileToRun()
+        elif (choix == 2):
+            addFileToStore()
+        elif (choix == 3):
+            runProcess()
+        elif (choix == 4):
+            view()
+        elif (choix == 5):
+            getOBJ()
+        elif (choix == 6):
+            requete()
+        elif (choix == 7):
+            GoOn = False
+        else:
+            print("Demande non comprise")
 
 def requete():
     query = str(input("Veuillez entrer une requête SQL (SELECT...FROM...WHERE...) : "))
@@ -23,3 +43,4 @@ def requete():
     return res
 
 if __name__=='__main__':
+    menu()

@@ -47,6 +47,3 @@ def connexion():
     conn.close()
     # Stop the tunnel
     tunnel.stop()
-
-if __name__='__main__':
-    #Tests
