@@ -49,20 +49,31 @@ def make_query():
     # Stop the tunnel
     tunnel.stop()
 
-def transfert(inputFile,directory):
-    dest = '/media/pi/BDD_Data/Raw/' + directory
+def ssh_connect():
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(hostname='81.185.93.239',username='pi',password='PiServer33')
         print("Connexion OK")
+        return ssh
     except:
         print("SSH connection failed")
 
+def set_file(inputFile,directory):
+    dest = '/media/pi/BDD_Data/Raw/' + directory
+    ssh = ssh_connect() #Mise en place de la connexion
     try:
-        print("Transfert en cours...")
         scp = SCPClient(ssh.get_transport())
+        print("Transfert en cours...")
         scp.put(inputFile, remote_path = dest)
         print("...transfert terminé !")
     except:
         print("SCP failed")
+    ssh.close()
+
+def get_file():
+    ssh = ssh_connect() #Mise en place de la connexion
+    stdin, stdout, stderr = ssh.exec_command('ls /media/pi/BDD_Data/Raw/')
+    for line in stdout.read().splitlines():
+        print(line)
+    ssh.close()
