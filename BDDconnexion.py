@@ -1,9 +1,10 @@
 #coding: utf-8
 import psycopg2
 from sshtunnel import SSHTunnelForwarder
-import sys
+import paramiko
+from scp import SCPClient
 
-def connexion():
+def make_query():
     ###Connexion par tunnel SSH à la raspberry et redirection des ports en local
     try:
         ###Connexion en SSH
@@ -47,3 +48,21 @@ def connexion():
     conn.close()
     # Stop the tunnel
     tunnel.stop()
+
+def transfert(inputFile,directory):
+    dest = '/media/pi/BDD_Data/Raw/' + directory
+    try:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.connect(hostname='81.185.93.239',username='pi',password='PiServer33')
+        print("Connexion OK")
+    except:
+        print("SSH connection failed")
+
+    try:
+        print("Transfert en cours...")
+        scp = SCPClient(ssh.get_transport())
+        scp.put(inputFile, remote_path = dest)
+        print("...transfert terminé !")
+    except:
+        print("SCP failed")
