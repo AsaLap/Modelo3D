@@ -80,7 +80,7 @@ def rendering(meshActor) :
 
     iren.Initialize()
     renWin.Render()
-    # iren.Start()
+    iren.Start()
     return renWin
 
 #export au format OBJ
