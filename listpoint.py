@@ -4,7 +4,6 @@ import csv
 
 ############################Ajout dans la liste####################
 def getzMin(filename, delimiter,modulo) :
-    points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
         k=0
@@ -19,7 +18,7 @@ def getzMin(filename, delimiter,modulo) :
 
 
 def importLidarCSV(filename, delimiter,modulo, zMin):
-    points = vtkPoints()
+    pointsfirst = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
         print ("Import du fichier")
@@ -28,7 +27,7 @@ def importLidarCSV(filename, delimiter,modulo, zMin):
         for row in reader:
             if (i != 0 and row[8]=='2.000' and i%modulo==0) : #row[8] est la catégorie des points, 2.000 correspond au sol
                 heigth=int(float(row[2]))-zMin
-                points.InsertNextPoint(int(float(row[0])),int(float(row[1])),int(float(row[2])))
+                #pointsfirst.InsertNextPoint(int(float(row[0])),int(float(row[1])),int(float(row[2])))
                 point = []
                 point.append(int(float(row[0])))
                 point.append(int(float(row[1])))
@@ -37,7 +36,7 @@ def importLidarCSV(filename, delimiter,modulo, zMin):
                 j=j+1
             i = i+1
     print ("Nombre de points importés  : ",j)
-    return points
+    return pointsfirst
 
 ############################Récupération des bordures et des coins(coin)######################################
 
@@ -61,38 +60,88 @@ def getCorner (pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
         if point[1] == yMin:
             yMinlist.append(point[0])
 
-    print(xMax)
-    print(yMax)
-    print(xMin)
-    print(yMin)
     xMaxy=max(xMaxlist)
     xMiny=min(xMinlist)
     yMaxx=min(yMaxlist)
     yMinx=max(yMinlist)
-    print(yMaxx)
-    print(yMinx)
-    print(xMaxy)
-    print(xMiny)
+    print(xMax, xMaxy)
+    print(yMax,yMaxx)
+    print(xMin,xMiny)
+    print(yMin,yMinx)
+
+
     return (xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
 
 
 
 def getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
-    print(xMin)
+    points = vtkPoints()
     for point in pointstri :
         if point[0] >= xMin and point[0]<= yMinx:
             if point[1]>=yMin and point[1]<=xMiny:
-                bord1.append(point)
+                bordinit.append(point)
         if point[0] >= yMinx and point[0] <= xMax:
             if point[1]>=yMin and point[1]<= xMaxy:
-                bord2.append(point)
+                bordinit.append(point)
         if point[0] <= xMax and point [0] >= yMaxx:
             if point[1]<= yMax and point[1] >= xMaxy:
-                bord3.append(point)
+                bordinit.append(point)
         if point[0]<= yMaxx and point[0]>= xMin:
             if point[1]<= yMax and point[1]>= xMiny:
-                bord4.append(point)
-        print(len(bord4))
+                bordinit.append(point)
+    for point in bordinit:
+        points.InsertNextPoint(point)
+    print(len(bordinit))
+    return points
+
+
+#triangulation
+
+def delaunay2D(points) :
+    profile = vtkPolyData()
+    profile.SetPoints(points)
+    delny = vtkDelaunay2D()
+    delny.SetInputData(profile)
+    return delny
+
+def mapping(delny) :
+    mapMesh = vtkPolyDataMapper()
+    mapMesh.SetInputConnection(delny.GetOutputPort())
+    meshActor = vtkActor()
+    meshActor.SetMapper(mapMesh)
+    meshActor.GetProperty().SetColor(.1, .2, .4)
+    return meshActor
+
+#rendering
+
+def rendering(meshActor) :
+    ren = vtkRenderer()
+    renWin = vtkRenderWindow()
+    renWin.AddRenderer(ren)
+    iren = vtkRenderWindowInteractor()
+    iren.SetRenderWindow(renWin)
+
+    # Add the actors to the renderer, set the background and size
+    ren.AddActor(meshActor)
+    ren.SetBackground(1, 1, 1)
+    renWin.SetSize(250, 250)
+    renWin.Render()
+    cam1 = ren.GetActiveCamera()
+    cam1.Zoom(1.5)
+
+    iren.Initialize()
+    renWin.Render()
+    iren.Start()
+    return renWin
+
+#export au format OBJ
+def exportOBJ(renWin) :
+    obj = vtkOBJExporter()
+    obj.SetFilePrefix("essai")
+    obj.SetRenderWindow(renWin)
+    obj.Write()
+
+
 
 if __name__=='__main__':
     i= 0
@@ -107,10 +156,15 @@ if __name__=='__main__':
     yMaxlist=[]
     yMinlist=[]
 
+    bordinit=[]
     bord1 = []
     bord2 = []
     bord3 = []
     bord4 = []
+    bord1down=[]
+    bord2down=[]
+    bord3down=[]
+    bord4down=[]
 
 
     zMin = 1000000000
@@ -123,9 +177,14 @@ if __name__=='__main__':
     xMiny=0
     xMaxy=0
 
-    modulo = 3000000
+    modulo = 2000
     print("Modulo : ",modulo)
     zMin = getzMin("essai.csv",",",modulo)
     fichier = importLidarCSV("essai.csv",",",modulo, zMin)
-    getCorner(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
+    xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx = getCorner(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
     getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
+    delny = delaunay2D(fichier)
+    print ("Triangulation de Delaunay")
+    mapped = mapping(delny)
+    print ("Mapping")
+    rendered = rendering(mapped)
