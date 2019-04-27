@@ -4,7 +4,12 @@ from sshtunnel import SSHTunnelForwarder
 import paramiko
 from scp import SCPClient
 
-def make_query():
+def make_query(query):
+    """
+    Fonction permettant de faire des requêtes sur la base de données
+    ARGS : la query de la requête SQL
+    RETURN : une liste contenant les résultats
+    """
     ###Connexion par tunnel SSH à la raspberry et redirection des ports en local
     try:
         ###Connexion en SSH
@@ -40,7 +45,6 @@ def make_query():
         res = curs.fetchall()
         conn.commit()
         curs.close()
-        return res
     except:
         print("Query failed")
 
@@ -48,6 +52,8 @@ def make_query():
     conn.close()
     # Stop the tunnel
     tunnel.stop()
+    return res
+
 
 def ssh_connect():
     try:
@@ -59,21 +65,35 @@ def ssh_connect():
     except:
         print("SSH connection failed")
 
-def set_file(inputFile,directory):
-    dest = '/media/pi/BDD_Data/Raw/' + directory
+
+def set_file(inputFile,hostPath):
     ssh = ssh_connect() #Mise en place de la connexion
     try:
         scp = SCPClient(ssh.get_transport())
         print("Transfert en cours...")
-        scp.put(inputFile, remote_path = dest)
+        scp.put(inputFile, remote_path = hostPath)
         print("...transfert terminé !")
     except:
         print("SCP failed")
+    scp.close()
     ssh.close()
 
-def get_file():
+
+def get_file(hostPath):
     ssh = ssh_connect() #Mise en place de la connexion
-    stdin, stdout, stderr = ssh.exec_command('ls /media/pi/BDD_Data/Raw/')
-    for line in stdout.read().splitlines():
-        print(line)
+    shellCom = 'ls '+ hostPath
+    stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
+    print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
+    fic = str(input())
+    hostPath += '/'+fic
+    print(hostPath)
+    localPath = './'
+    try:
+        scp = SCPClient(ssh.get_transport())
+        print("Téléchargement en cours...")
+        scp.get(hostPath, local_path = localPath)
+        print("...téléchargement terminé !")
+    except:
+        print("Le téléchargement a échoué!")
+    scp.close()
     ssh.close()

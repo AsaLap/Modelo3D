@@ -3,7 +3,11 @@
 
 import BDDconnexion
 import PDALtoVTK
-import paramiko
+
+
+def file_to_run():
+    ficPath = str(input("Donnez le chemin d'accès au fichier que vous souhaitez traiter : "))
+
 
 def add_file_to_store():
     inputFile = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
@@ -13,37 +17,25 @@ def add_file_to_store():
         formats = " - ".join(ALLOWED_FORMATS.keys())
         print("Le format de ce fichier (.", extension, ") n'est pas pris en charge, merci d'utiliser un format supporté : ", formats)
     else:
-        # dest = '/media/pi/BDD_Data/Raw/' + ALLOWED_FORMATS[extension]
-        directory = ALLOWED_FORMATS[extension]
-        BDDconnexion.set_file(inputFile,directory)
-        # ssh = BDDconnexion.ssh_connect() #Mise en place de la connexion
-        # try:
-        #     scp = SCPClient(ssh.get_transport())
-        #     print("Transfert en cours...")
-        #     scp.put(inputFile, remote_path = dest)
-        #     print("...transfert terminé !")
-        # except:
-        #     print("SCP failed")
-        # ssh.close()
+        hostPath = '/media/pi/BDD_Data/Raw/' + ALLOWED_FORMATS[extension]
+        BDDconnexion.set_file(inputFile,hostPath)
+
 
 def get_OBJ():
-    ssh = BDDconnexion.ssh_connect() #Mise en place de la connexion
-    print("Quel fichier voulez-vous récupérer ? ")
-    stdin, stdout, stderr = ssh.exec_command('ls /media/pi/BDD_Data/Raw/*/')
-    print(stdout.read().decode('ascii'))
-    fic = str(input())
-    scp = SCPClient(ssh.get_transport())
-    scp.get('./', '/media/pi/BDD_Data/Raw/*/fic')
-    ssh.close()
+    print("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans votre répertoire courant)")
+    BDDconnexion.get_file('/media/pi/BDD_Data/Output')
+
 
 def requete():
     query = str(input("Veuillez entrer une requête SQL (SELECT...FROM...WHERE...) : "))
     res = BDDconnexion.make_query(query)
     print(res)
 
+
 def quit():
     global GoOn
     GoOn = False
+
 
 def menu():
     while (GoOn):
