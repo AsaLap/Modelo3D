@@ -41,6 +41,7 @@ def make_query(query):
     ###Query here !
     try:
         res = []
+        print(query)
         curs.execute(query)
         res = curs.fetchall()
         conn.commit()

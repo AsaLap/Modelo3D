@@ -29,7 +29,8 @@ def get_OBJ():
 def requete():
     query = str(input("Veuillez entrer une requête SQL (SELECT...FROM...WHERE...) : "))
     res = BDDconnexion.make_query(query)
-    print(res)
+    for resultat in res:
+        print(resultat)
 
 
 def quit():
