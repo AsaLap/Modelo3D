@@ -36,7 +36,7 @@ def importLidarCSV(filename, delimiter,modulo, zMin):
                 j=j+1
             i = i+1
     print ("Nombre de points importés  : ",j)
-    return pointsfirst
+    return pointstri
 
 ############################Récupération des bordures et des coins(coin)######################################
 
@@ -64,12 +64,10 @@ def getCorner (pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
     xMiny=min(xMinlist)
     yMaxx=min(yMaxlist)
     yMinx=max(yMinlist)
-    print(xMax, xMaxy)
-    print(yMax,yMaxx)
-    print(xMin,xMiny)
-    print(yMin,yMinx)
-
-
+    print("xMax : ",xMax,"xMaxy : ",xMaxy)
+    print("yMax : ",yMax,"yMaxx : ",yMaxx)
+    print("xMin : ",xMin,"xMiny : ",xMiny)
+    print("yMin : ",yMin,"yMinx : ",yMinx)
     return (xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
 
 
@@ -80,18 +78,26 @@ def getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
         if point[0] >= xMin and point[0]<= yMinx:
             if point[1]>=yMin and point[1]<=xMiny:
                 bordinit.append(point)
+                bord1.append(point)
         if point[0] >= yMinx and point[0] <= xMax:
             if point[1]>=yMin and point[1]<= xMaxy:
                 bordinit.append(point)
+                bord2.append(point)
         if point[0] <= xMax and point [0] >= yMaxx:
             if point[1]<= yMax and point[1] >= xMaxy:
                 bordinit.append(point)
+                bord3.append(point)
         if point[0]<= yMaxx and point[0]>= xMin:
             if point[1]<= yMax and point[1]>= xMiny:
                 bordinit.append(point)
+                bord4.append(point)
     for point in bordinit:
         points.InsertNextPoint(point)
-    print(len(bordinit))
+
+    print(len(bord1))
+    print(len(bord2))
+    print(len(bord3))
+    print(len(bord4))
     return points
 
 
@@ -146,10 +152,23 @@ def exportOBJ(renWin) :
 if __name__=='__main__':
     i= 0
     j=2
-    k=-12
+    k=5
     heigth=0
-
     pointstri = []
+
+    # while i <10:
+    #     while j <12:
+    #         point=[]
+    #         point.append(i)
+    #         point.append(j)
+    #         point.append(k)
+    #         pointstri.append(point)
+    #         j=j+1
+    #     j=2
+    #     i=i+1
+    # print(pointstri)
+
+
     zMinlist=[]
     xMaxlist=[]
     xMinlist=[]
@@ -167,6 +186,7 @@ if __name__=='__main__':
     bord4down=[]
 
 
+
     zMin = 1000000000
     xMin = 1000000000
     yMin = 1000000000
@@ -177,13 +197,13 @@ if __name__=='__main__':
     xMiny=0
     xMaxy=0
 
-    modulo = 2000
+    modulo = 1
     print("Modulo : ",modulo)
     zMin = getzMin("essai.csv",",",modulo)
     fichier = importLidarCSV("essai.csv",",",modulo, zMin)
     xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx = getCorner(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
-    getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
-    delny = delaunay2D(fichier)
+    points = getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
+    delny = delaunay2D(points)
     print ("Triangulation de Delaunay")
     mapped = mapping(delny)
     print ("Mapping")
