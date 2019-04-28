@@ -73,32 +73,32 @@ def getCorner (pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
 
 
 def getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
-    points = vtkPoints()
+    bord1 = vtkPoints()
+    bord2 = vtkPoints()
+    bord3 = vtkPoints()
+    bord4 = vtkPoints()
+    bord1py=[]
     for point in pointstri :
+        pointtmp=point
+        pointtmp[2]=0
         if point[0] >= xMin and point[0]<= yMinx:
             if point[1]>=yMin and point[1]<=xMiny:
-                bordinit.append(point)
-                bord1.append(point)
+                bord1.InsertNextPoint(point)
+                bord1.InsertNextPoint(pointtmp)
         if point[0] >= yMinx and point[0] <= xMax:
             if point[1]>=yMin and point[1]<= xMaxy:
-                bordinit.append(point)
-                bord2.append(point)
+                bord2.InsertNextPoint(point)
+                bord2.InsertNextPoint(pointtmp)
         if point[0] <= xMax and point [0] >= yMaxx:
             if point[1]<= yMax and point[1] >= xMaxy:
-                bordinit.append(point)
-                bord3.append(point)
+                bord3.InsertNextPoint(point)
+                bord3.InsertNextPoint(pointtmp)
         if point[0]<= yMaxx and point[0]>= xMin:
             if point[1]<= yMax and point[1]>= xMiny:
-                bordinit.append(point)
-                bord4.append(point)
-    for point in bordinit:
-        points.InsertNextPoint(point)
+                bord4.InsertNextPoint(point)
+                bord4.InsertNextPoint(pointtmp)
+    return bord1,bord2,bord3,bord4
 
-    print(len(bord1))
-    print(len(bord2))
-    print(len(bord3))
-    print(len(bord4))
-    return points
 
 
 #triangulation
@@ -202,9 +202,9 @@ if __name__=='__main__':
     zMin = getzMin("essai.csv",",",modulo)
     fichier = importLidarCSV("essai.csv",",",modulo, zMin)
     xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx = getCorner(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
-    points = getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
-    delny = delaunay2D(points)
-    print ("Triangulation de Delaunay")
-    mapped = mapping(delny)
-    print ("Mapping")
-    rendered = rendering(mapped)
+    bord1,bord2,bord3,bord4 = getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
+    # delny = delaunay2D(points)
+    # print ("Triangulation de Delaunay")
+    # mapped = mapping(delny)
+    # print ("Mapping")
+    # rendered = rendering(mapped)
