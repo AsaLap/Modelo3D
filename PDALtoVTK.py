@@ -9,10 +9,32 @@
 from vtk import *
 import csv
 import time
+import subprocess
+import os
 
 
 beginning = time.time()
 start = beginning
+
+def initFile():
+    file = input("Entrez le nom du fichier (sans l'extension): ")
+    format= input("L'extension du fichier ? : ")
+    finput=file+'.'+format
+    if format=='csv':
+        print("Vous utilisez importCSV")
+        fichier = importCSV(finput,",",modulo)
+    else:
+        fileoutput=input("Quel nom voulez vous donnez a votre fichier en sortie: ")
+        output=fileoutput+'.csv'
+        print("Début de la conversion du fichier")
+        subprocess.call(["pdal","translate","-i",finput,"-o",output])
+        print("Fin de la conversion du fichier")
+        if format=='laz':
+            print("Vous utilisez importLidarCSV")
+            fichier = importLidarCSV(output,",", modulo)
+    return fichier
+
+
 
 def importCSV(filename, delimiter, modulo) :
     points = vtkPoints()
@@ -29,7 +51,7 @@ def importCSV(filename, delimiter, modulo) :
     print ("Nombre de points importés  : ",j)
     return points
 
-def importLidarCSV(filename, delimiter) :
+def importLidarCSV(filename, delimiter,modulo) :
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
@@ -37,7 +59,7 @@ def importLidarCSV(filename, delimiter) :
         i = 0
         j=0
         for row in reader:
-            if (i != 0 and row[8]=='2000') : #row[8] est la catégorie des points, 2.000 correspond au sol
+            if (i != 0 and row[8]=='2.000' and i%modulo==0) : #row[8] est la catégorie des points, 2.000 correspond au sol
                     points.InsertNextPoint(int(float(row[0])),int(float(row[1])), int(float(row[2])))
                     j=j+1
             i = i+1
@@ -113,10 +135,11 @@ def pipeline_VTK(fic,modulo):
     beginning = time.time()
 
 
+
 if __name__=='__main__':
-    modulo = 100000
+    modulo = 1000
     print("Modulo : ",modulo)
-    fichier = importCSV("essai.csv",",",modulo) # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
+    fichier=initFile()
     print ("Import : ", time.time() -beginning)
     beginning = time.time()
     delny = delaunay2D(fichier)
