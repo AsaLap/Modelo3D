@@ -77,29 +77,39 @@ def getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx):
     bord2 = vtkPoints()
     bord3 = vtkPoints()
     bord4 = vtkPoints()
+    bordDown = vtkPoints()
     bord1py=[]
+    bord1down=[]
     for point in pointstri :
-        pointtmp=point
+        pointtmp=point.copy()
         pointtmp[2]=0
+        print(point,pointtmp)
         if point[0] >= xMin and point[0]<= yMinx:
             if point[1]>=yMin and point[1]<=xMiny:
                 bord1.InsertNextPoint(point)
                 bord1.InsertNextPoint(pointtmp)
+                bordDown.InsertNextPoint(pointtmp)
+                bord1py.append(point)
+                bord1down.append(pointtmp)
         if point[0] >= yMinx and point[0] <= xMax:
             if point[1]>=yMin and point[1]<= xMaxy:
                 bord2.InsertNextPoint(point)
                 bord2.InsertNextPoint(pointtmp)
+                bordDown.InsertNextPoint(pointtmp)
         if point[0] <= xMax and point [0] >= yMaxx:
             if point[1]<= yMax and point[1] >= xMaxy:
                 bord3.InsertNextPoint(point)
                 bord3.InsertNextPoint(pointtmp)
+                bordDown.InsertNextPoint(pointtmp)
         if point[0]<= yMaxx and point[0]>= xMin:
             if point[1]<= yMax and point[1]>= xMiny:
                 bord4.InsertNextPoint(point)
                 bord4.InsertNextPoint(pointtmp)
-    return bord1,bord2,bord3,bord4
-
-
+                bordDown.InsertNextPoint(pointtmp)
+    print(bord1.GetNumberOfPoints())
+    print(bord1py)
+    print(bord1down[0],bord1down[1])
+    return bordDown,bord1,bord2,bord3,bord4
 
 #triangulation
 
@@ -118,9 +128,34 @@ def mapping(delny) :
     meshActor.GetProperty().SetColor(.1, .2, .4)
     return meshActor
 
-#rendering
+#socle
+def socle(bordDown,bord1,bord2,bord3,bord4) :
+    delnyInf = delaunay2D(bordDown)
+    mappedInf = mapping(delnyInf)
 
-def rendering(meshActor) :
+    #Création surfaces externes socle :
+    delnyExt1 = delaunay2D(bord1)
+    delnyExt1.SetProjectionPlaneMode(VTK_BEST_FITTING_PLANE) #pour que la triangulation se face dans le plan xz et pas xy
+    delnyExt1.Update()
+    delnyExt2 = delaunay2D(bord2)
+    delnyExt2.SetProjectionPlaneMode(VTK_BEST_FITTING_PLANE) #pour que la triangulation se face dans le plan xz et pas xy
+    delnyExt2.Update()
+    delnyExt3 = delaunay2D(bord3)
+    delnyExt3.SetProjectionPlaneMode(VTK_BEST_FITTING_PLANE) #pour que la triangulation se face dans le plan yz et pas xy
+    delnyExt3.Update()
+    delnyExt4 = delaunay2D(bord4)
+    delnyExt4.SetProjectionPlaneMode(VTK_BEST_FITTING_PLANE) #pour que la triangulation se face dans le plan yz et pas xy
+    delnyExt4.Update()
+
+    mappedExt1 = mapping(delnyExt1)
+    mappedExt2 = mapping(delnyExt2)
+    mappedExt3 = mapping(delnyExt3)
+    mappedExt4 = mapping(delnyExt4)
+
+    return mappedExt1, mappedExt2, mappedExt3, mappedExt4, mappedInf
+
+#rendering utiliser
+def renderingSocle(mappedExt1, mappedExt2, mappedExt3,mappedExt4, mappedInf):
     ren = vtkRenderer()
     renWin = vtkRenderWindow()
     renWin.AddRenderer(ren)
@@ -128,10 +163,14 @@ def rendering(meshActor) :
     iren.SetRenderWindow(renWin)
 
     # Add the actors to the renderer, set the background and size
-    ren.AddActor(meshActor)
+    ren.AddActor(mappedInf)
+    # ren.AddActor(mappedExt1)
+    # ren.AddActor(mappedExt2)
+    # ren.AddActor(mappedExt3)
+    # ren.AddActor(mappedExt4)
+
     ren.SetBackground(1, 1, 1)
     renWin.SetSize(250, 250)
-    renWin.Render()
     cam1 = ren.GetActiveCamera()
     cam1.Zoom(1.5)
 
@@ -139,6 +178,27 @@ def rendering(meshActor) :
     renWin.Render()
     iren.Start()
     return renWin
+#rendering
+
+# def rendering(meshActor) :
+#     ren = vtkRenderer()
+#     renWin = vtkRenderWindow()
+#     renWin.AddRenderer(ren)
+#     iren = vtkRenderWindowInteractor()
+#     iren.SetRenderWindow(renWin)
+#
+#     # Add the actors to the renderer, set the background and size
+#     ren.AddActor(meshActor)
+#     ren.SetBackground(1, 1, 1)
+#     renWin.SetSize(250, 250)
+#     renWin.Render()
+#     cam1 = ren.GetActiveCamera()
+#     cam1.Zoom(1.5)
+#
+#     iren.Initialize()
+#     renWin.Render()
+#     iren.Start()
+#     return renWin
 
 #export au format OBJ
 def exportOBJ(renWin) :
@@ -175,17 +235,6 @@ if __name__=='__main__':
     yMaxlist=[]
     yMinlist=[]
 
-    bordinit=[]
-    bord1 = []
-    bord2 = []
-    bord3 = []
-    bord4 = []
-    bord1down=[]
-    bord2down=[]
-    bord3down=[]
-    bord4down=[]
-
-
 
     zMin = 1000000000
     xMin = 1000000000
@@ -197,12 +246,16 @@ if __name__=='__main__':
     xMiny=0
     xMaxy=0
 
-    modulo = 1
+    modulo = 5000
     print("Modulo : ",modulo)
     zMin = getzMin("essai.csv",",",modulo)
     fichier = importLidarCSV("essai.csv",",",modulo, zMin)
     xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx = getCorner(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
-    bord1,bord2,bord3,bord4 = getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
+    bordDown,bord1,bord2,bord3,bord4 = getBorder(pointstri, xMin,xMax,yMin,yMax,xMaxy,xMiny,yMinx,yMaxx)
+    print ("listeEcrite")
+    face1,face2,face3,face4,faceInf = socle(bordDown,bord1,bord2,bord3,bord4)
+    print ("socleMapped")
+    rendered = renderingSocle(face1,face2,face3,face4,faceInf)
     # delny = delaunay2D(points)
     # print ("Triangulation de Delaunay")
     # mapped = mapping(delny)
