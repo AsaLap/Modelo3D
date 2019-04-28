@@ -90,8 +90,31 @@ def exportOBJ(renWin) :
     obj.SetRenderWindow(renWin)
     obj.Write()
 
+#La même chose que dans le main de ce fichier mais utilisable ailleurs car dans une fonction avec arguments
+def pipeline_VTK(fic,modulo):
+    beginning = time.time()
+    start = beginning
+    print("Modulo : ",modulo)
+    fichier = importCSV(fic,",",modulo) # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
+    print ("Import : ", time.time() -beginning)
+    beginning = time.time()
+    delny = delaunay2D(fichier)
+    print ("Triangulation de Delaunay : ", time.time() -beginning)
+    beginning = time.time()
+    mapped = mapping(delny)
+    print ("Mapping : ", time.time() -beginning)
+    beginning = time.time()
+    rendered = rendering(mapped)
+    print ("Rendering : ", time.time() -beginning)
+    beginning = time.time()
+    exportOBJ(rendered)
+    print ("Ecriture obj : ", time.time() -beginning)
+    print ("Temps total : ",time.time()-start)
+    beginning = time.time()
+
+
 if __name__=='__main__':
-    modulo = 1000000
+    modulo = 100000
     print("Modulo : ",modulo)
     fichier = importCSV("essai.csv",",",modulo) # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
     print ("Import : ", time.time() -beginning)

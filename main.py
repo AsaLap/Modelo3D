@@ -21,6 +21,16 @@ def add_file_to_store():
         BDDconnexion.set_file(inputFile,hostPath)
 
 
+def run_process():
+    fic = BDDconnexion.get_file('/media/pi/BDD_Data/Raw/CSV')
+    PDALtoVTK.pipeline_VTK(fic,100000)
+    return untruc
+
+
+def view():
+    print(untruc)
+
+
 def get_OBJ():
     print("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans votre répertoire courant)")
     BDDconnexion.get_file('/media/pi/BDD_Data/Output')

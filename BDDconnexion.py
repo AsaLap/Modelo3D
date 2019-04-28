@@ -6,9 +6,9 @@ from scp import SCPClient
 
 def make_query(query):
     """
-    Fonction permettant de faire des requêtes sur la base de données
-    ARGS : la query de la requête SQL
-    RETURN : une liste contenant les résultats
+        Fonction permettant de faire des requêtes sur la base de données
+        ARGS : la query de la requête SQL
+        RETURN : une liste contenant les résultats de la requête
     """
     ###Connexion par tunnel SSH à la raspberry et redirection des ports en local
     try:
@@ -57,6 +57,11 @@ def make_query(query):
 
 
 def ssh_connect():
+    """
+        Fonction permettant de mettre en place une connexion SSH pour le SCP
+        ARGS : none
+        RETURN : la connexion SSH
+    """
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -65,9 +70,18 @@ def ssh_connect():
         return ssh
     except:
         print("SSH connection failed")
+        return None
 
 
 def set_file(inputFile,hostPath):
+    """
+        Fonction permettant de déposer un fichier sur le disque dur de la
+        raspberry
+        ARGS :
+            inputFile : le fichier à déposer
+            hostPath : le dossier dans lequel aller déposer ce fichier
+        RETURN : none
+    """
     ssh = ssh_connect() #Mise en place de la connexion
     try:
         scp = SCPClient(ssh.get_transport())
@@ -81,6 +95,12 @@ def set_file(inputFile,hostPath):
 
 
 def get_file(hostPath):
+    """
+        Fonction permettant de récupérer un fichier présent sur le disque dur
+        de la raspberry
+        ARGS : le/les dossier(s) dans lequel aller chercher ce fichier
+        RETURN : le nom du fichier choisi
+    """
     ssh = ssh_connect() #Mise en place de la connexion
     shellCom = 'ls '+ hostPath
     stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
@@ -96,5 +116,6 @@ def get_file(hostPath):
         print("...téléchargement terminé !")
     except:
         print("Le téléchargement a échoué!")
+    return fic
     scp.close()
     ssh.close()
