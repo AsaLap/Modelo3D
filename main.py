@@ -5,52 +5,93 @@ import BDDconnexion
 import PDALtoVTK
 
 
-def convertisseur(file,extension):
+def converter(file,extension):
+    print("Conversion du fichier en CSV...")
+    try:
+        #TODO : conversion avec PDAL
+        print("...conversion réussie !")
+    except:
+        print("...conversion échouée !")
     return fileConvertie
 
 
-def file_to_run():
-    file = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
-    #Conversion du fichier si pas CSV
-    test_format(file)
-
-
-def run_process():
-    fic = BDDconnexion.get_file('/media/pi/BDD_Data/Raw/CSV')
-    PDALtoVTK.pipeline_VTK(fic,100000)
-    return untruc
-
-
 def test_format(file):
-    splited_file = file.split('.')
-    extension = (splited_file[len(splited_file)-1]).lower()
+    """
+        Fonction qui teste si le format du fichier entré est pris en charge
+        ARGS : le fichier d'entrée
+        RETURN : l'extension et un booléen d'acceptation ou non de l'extension
+    """
+    splitedFile = file.split('.')
+    extension = (splitedFile[len(splitedFile)-1]).lower()
     if (extension not in ALLOWED_FORMATS):
         formats = " - ".join(ALLOWED_FORMATS)
         print("Le format de ce fichier (.", extension, ") n'est pas pris en charge, merci d'utiliser un format supporté : ", formats)
+        return extension, False
     else:
-        hostPath = '/media/pi/BDD_Data/Raw/' + ALLOWED_FORMATS[extension]
+        return extension, True
 
 
+#Manque la fonction de conversion
+def file_to_run():
+    """
+        Fonction qui lance le traitement après vérification du format et
+        conversion si nécessaire, propose de sauvegarder le fichier sur la base
+        de données
+        ARGS : None
+        RETURN : None
+    """
+    file = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
+    extension, run = test_format(file)
+    if (not run):
+        return
+    elif (extension == "csv"):
+        CSVFile = file
+    else:
+        CSVFile = converter(file,extension)
+    PDALtoVTK.pipeline_VTK(CSVFile,100000)
+    rep = int(input("Voulez-vous sauvegarder votre fichier d'entrée sur la base de données ? (1 : Oui, 2 : Non) : "))
+    if (rep == 1):
+        BDDconnexion.set_file(CSVFile,CSV_PATH)
+
+
+#Manque la fonction de conversion
 def file_to_store():
+    """
+        Fonction qui sauvegarde le fichier sur la base données après
+        vérification de son format et conversion en CSV
+        ARGS : None
+        RETURN : None
+    """
     file = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
+    extension, run = test_format(file)
+    if (not run):
+        return
+    elif (extension == "csv"):
+        CSVFile = file
+    else:
+        CSVFile = converter(file,extension)
+    BDDconnexion.set_file(CSVFile,CSV_PATH)
 
-    BDDconnexion.set_file(inputFile,hostPath)
+
+def run_process():
+    CSVFile = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH)
+    CSVFile = LOCAL_PATH + CSVFile
+    PDALtoVTK.pipeline_VTK(CSVFile, 100000)
+    return untruc
 
 
 def view_Unity3D():
-    print(untruc)
+    print("untruc")
 
 
 def get_OBJ():
-    print("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans votre répertoire courant)")
-    BDDconnexion.get_file('/media/pi/BDD_Data/Output')
+    print("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant)")
+    BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH)
 
 
-def requete():
-    query = str(input("Veuillez entrer une requête SQL (SELECT...FROM...WHERE...) : "))
-    res = BDDconnexion.make_query(query)
-    for resultat in res:
-        print(resultat)
+def mode_libre():
+    #TODO : faire le parser pour le mode libre
+    return
 
 
 def read_config():
@@ -85,4 +126,7 @@ def menu():
 if __name__=='__main__':
     GoOn = True
     ALLOWED_FORMATS = ['las','laz','csv']
+    # CSV_PATH =
+    # OBJ_PATH =
+    LOCAL_PATH = './'
     menu()

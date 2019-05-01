@@ -4,11 +4,13 @@ from sshtunnel import SSHTunnelForwarder
 import paramiko
 from scp import SCPClient
 
-def make_query(query):
+def ssh_Tunnel():
     """
-        Fonction permettant de faire des requêtes sur la base de données
-        ARGS : la query de la requête SQL
-        RETURN : une liste contenant les résultats de la requête
+        Fonction permettant de mettre en place un tunnel SSH afin de rediriger
+        les ports locaux et distants pour faire des requêtes sur la base de
+        données
+        ARGS : None
+        RETURN : Le tunnel
     """
     ###Connexion par tunnel SSH à la raspberry et redirection des ports en local
     try:
@@ -21,10 +23,19 @@ def make_query(query):
         local_bind_address=('localhost',5432)) #Redirection on a local machine port
         tunnel.start() #start ssh sever
         print ("Server connected via SSH")
+        return tunnel
     except:
         print("SSH connection failed")
+        tunnel.stop()
+        return None
 
-    ###Connexion à la BDD
+def make_query(query):
+    """
+        Fonction permettant de faire des requêtes sur la base de données
+        ARGS : la query de la requête SQL
+        RETURN : une liste contenant les résultats de la requête
+    """
+    tunnel = ssh_Tunnel()
     try:
         conn = psycopg2.connect(
             database='test',
@@ -37,7 +48,6 @@ def make_query(query):
     except:
         print("BDD connection failed !")
         tunnel.stop()
-
     ###Query here !
     try:
         res = []
@@ -48,11 +58,9 @@ def make_query(query):
         curs.close()
     except:
         print("Query failed")
-
-    # Close connections
-    conn.close()
-    # Stop the tunnel
-    tunnel.stop()
+    finally:
+        conn.close()
+        tunnel.stop()
     return res
 
 
@@ -80,7 +88,7 @@ def set_file(inputFile,hostPath):
         ARGS :
             inputFile : le fichier à déposer
             hostPath : le dossier dans lequel aller déposer ce fichier
-        RETURN : none
+        RETURN : None
     """
     ssh = ssh_connect() #Mise en place de la connexion
     try:
@@ -90,11 +98,13 @@ def set_file(inputFile,hostPath):
         print("...transfert terminé !")
     except:
         print("SCP failed")
-    scp.close()
-    ssh.close()
+    finally:
+        scp.close()
+        ssh.close()
 
 
-def get_file(hostPath):
+#TODO : changer la fonction pour utiliser la BDD plutot qu'un 'ls' pour afficher les fichiers dispos
+def get_file(hostPath,localPath):
     """
         Fonction permettant de récupérer un fichier présent sur le disque dur
         de la raspberry
@@ -105,10 +115,9 @@ def get_file(hostPath):
     shellCom = 'ls '+ hostPath
     stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
     print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
-    fic = str(input())
+    fic = str(input("Quel fichier voulez-vous récupérer ? : "))
     hostPath += '/'+fic
     print(hostPath)
-    localPath = './'
     try:
         scp = SCPClient(ssh.get_transport())
         print("Téléchargement en cours...")
@@ -116,6 +125,11 @@ def get_file(hostPath):
         print("...téléchargement terminé !")
     except:
         print("Le téléchargement a échoué!")
+    finally:
+        scp.close()
+        ssh.close()
     return fic
-    scp.close()
-    ssh.close()
+
+
+if __name__=='__main__':
+    print(make_query("select * from reference;"))

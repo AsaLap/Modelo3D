@@ -113,7 +113,7 @@ def exportOBJ(renWin) :
     obj.Write()
 
 #La même chose que dans le main de ce fichier mais utilisable ailleurs car dans une fonction avec arguments
-def pipeline_VTK(fic,modulo):
+def pipeline_VTK(fic,modulo=1):
     beginning = time.time()
     start = beginning
     print("Modulo : ",modulo)
@@ -132,7 +132,6 @@ def pipeline_VTK(fic,modulo):
     exportOBJ(rendered)
     print ("Ecriture obj : ", time.time() -beginning)
     print ("Temps total : ",time.time()-start)
-    beginning = time.time()
 
 
 
