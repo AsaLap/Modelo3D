@@ -5,20 +5,14 @@ import BDDconnexion
 import PDALtoVTK
 
 
+def convertisseur(file,extension):
+    return fileConvertie
+
+
 def file_to_run():
-    ficPath = str(input("Donnez le chemin d'accès au fichier que vous souhaitez traiter : "))
-
-
-def add_file_to_store():
-    inputFile = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
-    splited_file = inputFile.split('.')
-    extension = (splited_file[len(splited_file)-1]).lower()
-    if (extension not in ALLOWED_FORMATS.keys()):
-        formats = " - ".join(ALLOWED_FORMATS.keys())
-        print("Le format de ce fichier (.", extension, ") n'est pas pris en charge, merci d'utiliser un format supporté : ", formats)
-    else:
-        hostPath = '/media/pi/BDD_Data/Raw/' + ALLOWED_FORMATS[extension]
-        BDDconnexion.set_file(inputFile,hostPath)
+    file = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
+    #Conversion du fichier si pas CSV
+    test_format(file)
 
 
 def run_process():
@@ -27,7 +21,23 @@ def run_process():
     return untruc
 
 
-def view():
+def test_format(file):
+    splited_file = file.split('.')
+    extension = (splited_file[len(splited_file)-1]).lower()
+    if (extension not in ALLOWED_FORMATS):
+        formats = " - ".join(ALLOWED_FORMATS)
+        print("Le format de ce fichier (.", extension, ") n'est pas pris en charge, merci d'utiliser un format supporté : ", formats)
+    else:
+        hostPath = '/media/pi/BDD_Data/Raw/' + ALLOWED_FORMATS[extension]
+
+
+def file_to_store():
+    file = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
+
+    BDDconnexion.set_file(inputFile,hostPath)
+
+
+def view_Unity3D():
     print(untruc)
 
 
@@ -43,6 +53,10 @@ def requete():
         print(resultat)
 
 
+def read_config():
+    fic
+
+
 def quit():
     global GoOn
     GoOn = False
@@ -52,11 +66,11 @@ def menu():
     while (GoOn):
         choix = [
             ['Utiliser un fichier source (local) pour le traiter', lambda : file_to_run()],
-            ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : add_file_to_store()],
             ['Effectuer un traitement sur un fichier existant sur la base de données', lambda : run_process()],
-            ['Visualiser un maillage pré-traité', lambda : view()],
+            ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : file_to_store()],
+            ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Récupérer un fichier au format OBJ (post-traitement)', lambda : get_OBJ()],
-            ['Faire une requête libre sur la base de données (developpeurs uniquement)', lambda : requete()],
+            ['Mode libre (Dev)', lambda : requete()],
             ['Quitter', lambda : quit()]
             ]
         for i in range(len(choix)):
@@ -70,5 +84,5 @@ def menu():
 
 if __name__=='__main__':
     GoOn = True
-    ALLOWED_FORMATS = {'las':'Lidar','laz':'LidarZip','csv':'CSV'}
+    ALLOWED_FORMATS = ['las','laz','csv']
     menu()
