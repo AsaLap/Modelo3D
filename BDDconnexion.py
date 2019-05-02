@@ -114,8 +114,9 @@ def get_file(hostPath,localPath):
     ssh = ssh_connect() #Mise en place de la connexion
     shellCom = 'ls '+ hostPath
     stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
+    print("\nListe des fichiers OBJ sur la BDD :")
     print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
-    fic = str(input("Quel fichier voulez-vous récupérer ? : "))
+    fic = str(input("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant) : "))
     hostPath += '/'+fic
     print(hostPath)
     try:

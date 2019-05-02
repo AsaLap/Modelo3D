@@ -3,6 +3,7 @@
 
 import BDDconnexion
 import PDALtoVTK
+import configparser
 
 
 def converter(file,extension):
@@ -85,7 +86,6 @@ def view_Unity3D():
 
 
 def get_OBJ():
-    print("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant)")
     BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH)
 
 
@@ -95,7 +95,10 @@ def mode_libre():
 
 
 def read_config():
-    fic
+    config = configparser.ConfigParser()
+    config.read('modelo.ini')
+    ALLOWED_FORMATS = config['FORMATS']['ALLOWED_FORMATS'].split(',')
+    return config,ALLOWED_FORMATS
 
 
 def quit():
@@ -125,8 +128,14 @@ def menu():
 
 if __name__=='__main__':
     GoOn = True
-    ALLOWED_FORMATS = ['las','laz','csv']
-    # CSV_PATH =
-    # OBJ_PATH =
-    LOCAL_PATH = './'
+    config,ALLOWED_FORMATS = read_config()
+    CSV_PATH = config['PATH']['CSV_PATH']
+    OBJ_PATH = config['PATH']['OBJ_PATH']
+    LOCAL_PATH = config['PATH']['LOCAL_PATH']
+    IP_PUBLIQUE = config['SSH']['IP_PUBLIQUE']
+    IP_LOCALE = config['SSH']['IP_LOCALE']
+    USER = config['SSH']['USER']
+    PASSWORD = config['SSH']['PASSWORD']
+    BDD_USER = config['BDD']['BDD_USER']
+    BDD_PASSWORD = config['BDD']['BDD_PASSWORD']
     menu()
