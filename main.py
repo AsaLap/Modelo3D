@@ -78,7 +78,7 @@ def run_process():
     CSVFile = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
     CSVFile = LOCAL_PATH + CSVFile
     PDALtoVTK.pipeline_VTK(CSVFile,MODULO)
-    choix = int(input("Voulez-vous enregistrer cet OBJ dans la base de données ? (1 : Oui, 2 : Non) : "))
+    choix = int(input("Voulez-vous enregistrer le rendu OBJ dans la base de données ? (1 : Oui, 2 : Non) : "))
     if (choix == 1):
         OBJFile = CSVFile[:-3] + 'obj'
         BDDconnexion.set_file(OBJFile,OBJ_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
@@ -88,8 +88,14 @@ def view_Unity3D():
     print("untruc")
 
 
-def get_OBJ():
-    BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
+def get_CSV_OBJ():
+    choix = int(input("CSV (1) ou OBJ (2) : "))
+    if (choix == 1):
+        BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
+    elif (choix == 2):
+        BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
+    else:
+        print("Choix non valide, retour au menu !")
 
 
 def mode_libre():
@@ -127,7 +133,7 @@ def menu():
             ['Effectuer un traitement sur un fichier existant sur la base de données', lambda : run_process()],
             ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : file_to_store()],
             ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
-            ['Récupérer un fichier au format OBJ (post-traitement)', lambda : get_OBJ()],
+            ['Récupérer un fichier au format CSV (pré traitement) ou OBJ (post traitement)', lambda : get_CSV_OBJ()],
             ['Mode libre (Dev)', lambda : mode_libre()],
             ['Stockage Garbage', lambda : garbage()],
             ['Quitter', lambda : quit()]
