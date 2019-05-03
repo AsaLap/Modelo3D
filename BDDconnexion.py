@@ -4,7 +4,7 @@ from sshtunnel import SSHTunnelForwarder
 import paramiko
 from scp import SCPClient
 
-def ssh_Tunnel():
+def ssh_Tunnel(IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD):
     """
         Fonction permettant de mettre en place un tunnel SSH afin de rediriger
         les ports locaux et distants pour faire des requêtes sur la base de
@@ -16,11 +16,11 @@ def ssh_Tunnel():
     try:
         ###Connexion en SSH
         tunnel = SSHTunnelForwarder(
-        ('81.185.93.239', 22), #Remote server IP and SSH port
-        ssh_username = "pi",
-        ssh_password = "PiServer33",
-        remote_bind_address=('192.168.0.20', 5432), #PostgreSQL server IP and server port on remote machine
-        local_bind_address=('localhost',5432)) #Redirection on a local machine port
+        (IP_PUBLIQUE, PORT_SSH), #Remote server IP and SSH port
+        ssh_username = USER,
+        ssh_password = PASSWORD,
+        remote_bind_address=(IP_LOCALE,PORT_POSTGRES), #PostgreSQL server IP and server port on remote machine
+        local_bind_address=('localhost',PORT_POSTGRES)) #Redirection on a local machine port
         tunnel.start() #start ssh sever
         print ("Server connected via SSH")
         return tunnel
@@ -29,18 +29,18 @@ def ssh_Tunnel():
         tunnel.stop()
         return None
 
-def make_query(query):
+def make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE):
     """
         Fonction permettant de faire des requêtes sur la base de données
         ARGS : la query de la requête SQL
         RETURN : une liste contenant les résultats de la requête
     """
-    tunnel = ssh_Tunnel()
+    tunnel = ssh_Tunnel(IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD)
     try:
         conn = psycopg2.connect(
-            database='test',
-            user='pi',
-            password='PiServer33',
+            database=DATABASE,
+            user=BDD_USER,
+            password=BDD_PASSWORD,
             host=tunnel.local_bind_host,
             port=tunnel.local_bind_port)
         curs = conn.cursor()
@@ -64,7 +64,7 @@ def make_query(query):
     return res
 
 
-def ssh_connect():
+def ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
     """
         Fonction permettant de mettre en place une connexion SSH pour le SCP
         ARGS : none
@@ -73,7 +73,7 @@ def ssh_connect():
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname='81.185.93.239',username='pi',password='PiServer33')
+        ssh.connect(hostname=IP_PUBLIQUE,username=USER,password=PASSWORD)
         print("Connexion OK")
         return ssh
     except:
@@ -81,7 +81,7 @@ def ssh_connect():
         return None
 
 
-def set_file(inputFile,hostPath):
+def set_file(inputFile,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD):
     """
         Fonction permettant de déposer un fichier sur le disque dur de la
         raspberry
@@ -90,7 +90,7 @@ def set_file(inputFile,hostPath):
             hostPath : le dossier dans lequel aller déposer ce fichier
         RETURN : None
     """
-    ssh = ssh_connect() #Mise en place de la connexion
+    ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
     try:
         scp = SCPClient(ssh.get_transport())
         print("Transfert en cours...")
@@ -101,17 +101,19 @@ def set_file(inputFile,hostPath):
     finally:
         scp.close()
         ssh.close()
+    #Création de la requête d'ajout du fichier dans la BDD
+    #make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
 
 
 #TODO : changer la fonction pour utiliser la BDD plutot qu'un 'ls' pour afficher les fichiers dispos
-def get_file(hostPath,localPath):
+def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
     """
         Fonction permettant de récupérer un fichier présent sur le disque dur
         de la raspberry
         ARGS : le/les dossier(s) dans lequel aller chercher ce fichier
         RETURN : le nom du fichier choisi
     """
-    ssh = ssh_connect() #Mise en place de la connexion
+    ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
     shellCom = 'ls '+ hostPath
     stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
     print("\nListe des fichiers OBJ sur la BDD :")
@@ -130,7 +132,3 @@ def get_file(hostPath,localPath):
         scp.close()
         ssh.close()
     return fic
-
-
-if __name__=='__main__':
-    print(make_query("select * from reference;"))

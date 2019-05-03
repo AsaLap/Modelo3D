@@ -27,9 +27,9 @@ def test_format(file):
     if (extension not in ALLOWED_FORMATS):
         formats = " - ".join(ALLOWED_FORMATS)
         print("Le format de ce fichier (.", extension, ") n'est pas pris en charge, merci d'utiliser un format supporté : ", formats)
-        return extension, False
+        return extension,False
     else:
-        return extension, True
+        return extension,True
 
 
 #Manque la fonction de conversion
@@ -52,7 +52,7 @@ def file_to_run():
     PDALtoVTK.pipeline_VTK(CSVFile,100000)
     rep = int(input("Voulez-vous sauvegarder votre fichier d'entrée sur la base de données ? (1 : Oui, 2 : Non) : "))
     if (rep == 1):
-        BDDconnexion.set_file(CSVFile,CSV_PATH)
+        BDDconnexion.set_file(CSVFile,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
 
 
 #Manque la fonction de conversion
@@ -71,11 +71,11 @@ def file_to_store():
         CSVFile = file
     else:
         CSVFile = converter(file,extension)
-    BDDconnexion.set_file(CSVFile,CSV_PATH)
+    BDDconnexion.set_file(CSVFile,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
 
 
 def run_process():
-    CSVFile = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH)
+    CSVFile = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
     CSVFile = LOCAL_PATH + CSVFile
     PDALtoVTK.pipeline_VTK(CSVFile, 100000)
     return untruc
@@ -86,7 +86,7 @@ def view_Unity3D():
 
 
 def get_OBJ():
-    BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH)
+    BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
 
 
 def mode_libre():
@@ -129,13 +129,17 @@ def menu():
 if __name__=='__main__':
     GoOn = True
     config,ALLOWED_FORMATS = read_config()
+    ### Attribution des valeurs aux constantes ###
     CSV_PATH = config['PATH']['CSV_PATH']
     OBJ_PATH = config['PATH']['OBJ_PATH']
     LOCAL_PATH = config['PATH']['LOCAL_PATH']
     IP_PUBLIQUE = config['SSH']['IP_PUBLIQUE']
     IP_LOCALE = config['SSH']['IP_LOCALE']
+    PORT_SSH = int(config['SSH']['PORT_SSH'])
+    PORT_POSTGRES = int(config['SSH']['PORT_POSTGRES'])
     USER = config['SSH']['USER']
     PASSWORD = config['SSH']['PASSWORD']
     BDD_USER = config['BDD']['BDD_USER']
     BDD_PASSWORD = config['BDD']['BDD_PASSWORD']
+    DATABASE = config['BDD']['DATABASE']
     menu()
