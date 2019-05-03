@@ -49,7 +49,7 @@ def file_to_run():
         CSVFile = file
     else:
         CSVFile = converter(file,extension)
-    PDALtoVTK.pipeline_VTK(CSVFile,100000)
+    PDALtoVTK.pipeline_VTK(CSVFile,MODULO)
     rep = int(input("Voulez-vous sauvegarder votre fichier d'entrée sur la base de données ? (1 : Oui, 2 : Non) : "))
     if (rep == 1):
         BDDconnexion.set_file(CSVFile,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
@@ -77,8 +77,11 @@ def file_to_store():
 def run_process():
     CSVFile = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
     CSVFile = LOCAL_PATH + CSVFile
-    PDALtoVTK.pipeline_VTK(CSVFile, 100000)
-    return untruc
+    PDALtoVTK.pipeline_VTK(CSVFile,MODULO)
+    choix = int(input("Voulez-vous enregistrer cet OBJ dans la base de données ? (1 : Oui, 2 : Non) : "))
+    if (choix == 1):
+        OBJFile = CSVFile[:-3] + 'obj'
+        BDDconnexion.set_file(OBJFile,OBJ_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
 
 
 def view_Unity3D():
@@ -92,6 +95,17 @@ def get_OBJ():
 def mode_libre():
     #TODO : faire le parser pour le mode libre
     return
+
+
+def garbage():
+    choix = int(input("Vous voules récupérer (1) ou ajouter (2) un fichier ? : "))
+    if (choix == 1):
+        BDDconnexion.get_file(GARBAGE_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
+    elif (choix == 2):
+        garbage = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
+        BDDconnexion.set_file(garbage,GARBAGE_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
+    else:
+        print("Gé pa compri...")
 
 
 def read_config():
@@ -114,7 +128,8 @@ def menu():
             ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : file_to_store()],
             ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Récupérer un fichier au format OBJ (post-traitement)', lambda : get_OBJ()],
-            ['Mode libre (Dev)', lambda : requete()],
+            ['Mode libre (Dev)', lambda : mode_libre()],
+            ['Stockage Garbage', lambda : garbage()],
             ['Quitter', lambda : quit()]
             ]
         for i in range(len(choix)):
@@ -133,6 +148,7 @@ if __name__=='__main__':
     CSV_PATH = config['PATH']['CSV_PATH']
     OBJ_PATH = config['PATH']['OBJ_PATH']
     LOCAL_PATH = config['PATH']['LOCAL_PATH']
+    GARBAGE_PATH = config['PATH']['GARBAGE_PATH']
     IP_PUBLIQUE = config['SSH']['IP_PUBLIQUE']
     IP_LOCALE = config['SSH']['IP_LOCALE']
     PORT_SSH = int(config['SSH']['PORT_SSH'])
@@ -142,4 +158,5 @@ if __name__=='__main__':
     BDD_USER = config['BDD']['BDD_USER']
     BDD_PASSWORD = config['BDD']['BDD_PASSWORD']
     DATABASE = config['BDD']['DATABASE']
+    MODULO = int(config['PROCESS']['MODULO'])
     menu()
