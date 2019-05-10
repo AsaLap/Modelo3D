@@ -50,12 +50,14 @@ def make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,
         tunnel.stop()
     ###Query here !
     try:
+        print("Requête en cours...")
         res = []
         print(query)
         curs.execute(query)
         res = curs.fetchall()
         conn.commit()
         curs.close()
+        print("...requête terminée!")
     except:
         print("Query failed")
     finally:
@@ -81,13 +83,16 @@ def ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
         return None
 
 
-def set_file(inputFile,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD):
+#TODO : faire la reqûete d'ajout sur la BDD
+def set_file(inputFile,lidar,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD):
     """
         Fonction permettant de déposer un fichier sur le disque dur de la
-        raspberry
+        raspberry et d'ajouter son entrée dans la base de données.
         ARGS :
             inputFile : le fichier à déposer
             hostPath : le dossier dans lequel aller déposer ce fichier
+            IP_PUBLIQUE : l'IP publique de la raspberry
+            Autres : leur nom = leur utilité
         RETURN : None
     """
     ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
@@ -109,8 +114,12 @@ def set_file(inputFile,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD
 def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
     """
         Fonction permettant de récupérer un fichier présent sur le disque dur
-        de la raspberry
-        ARGS : le/les dossier(s) dans lequel aller chercher ce fichier
+        de la raspberry et ses informations contenues dans la base de données.
+        ARGS :
+            hostPath : le chemin d'accès aux fichiers sur la raspberry
+            localPath : le chemin local où télécharger ces fichiers
+            IP_PUBLIQUE : l'IP publique de la raspberry
+            Autres : leur nom = leur utilité
         RETURN : le nom du fichier choisi
     """
     ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
@@ -131,4 +140,4 @@ def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
     finally:
         scp.close()
         ssh.close()
-    return fic
+    return fic,lidar,id

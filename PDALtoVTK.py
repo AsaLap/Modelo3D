@@ -66,7 +66,7 @@ def checkHeader(lidar, reader) :
         if (regEx == None) :
             print ("erreur de saisie")
         else :
-            res = res.lower()         
+            res = res.lower()
     while (res == "n") :
         res = "o"
         regEx = None
@@ -128,7 +128,7 @@ def importCSV(filename, delimiter,modulo) :
         i = 0
         j = 0
         for row in reader:
-            if (i != 0 and i%modulo == 0) : 
+            if (i != 0 and i%modulo == 0) :
                 points.InsertNextPoint(float(row[importList[0]]),float(row[importList[1]]),float(row[importList[2]]))
                 j=j+1
             i = i+1
@@ -165,7 +165,7 @@ def bordures(delny, bounds) :
     #On récupère les points qui sont dans des cylindres centrés sur le milieu de chaque coté
 
     #trouver les centres des cylindres
-    xcenter = bounds[0] + (bounds[1]-bounds[0])/2 
+    xcenter = bounds[0] + (bounds[1]-bounds[0])/2
     ycenter = bounds[2] + (bounds[3]-bounds[2])/2
     center1 = [xcenter,bounds[2],0]
     center2 = [bounds[1],ycenter,0]
@@ -212,7 +212,7 @@ def bordures(delny, bounds) :
         pointarray = bord.GetOutput().GetPoints() #accède aux points
         for j in range(0,pointarray.GetNumberOfPoints(),1) :
             tmp = pointarray.GetPoint(j)
-            faceList[0].InsertNextPoint(tmp[0],tmp[1],hauteurSocle) 
+            faceList[0].InsertNextPoint(tmp[0],tmp[1],hauteurSocle)
             faceList[i].InsertNextPoint(tmp[0],tmp[1],hauteurSocle)
             faceList[i].InsertNextPoint(tmp[0],tmp[1],tmp[2])
     return faceList
@@ -260,15 +260,15 @@ def exportOBJ(renWin) :
     obj.Write()
 
 #La même chose que dans le main de ce fichier mais utilisable ailleurs car dans une fonction avec arguments
-def pipeline_VTK(fic,modulo=1,socleChoix="non",lidar="non"):
+def pipeline_VTK(fic,lidar=False,modulo=1,socleChoix="non"):
     beginning = time.time()
     start = beginning
     print("Modulo : ",modulo)
-    if lidar =="non" :
-        fichier, bounds = importCSV(fic,",",modulo) # a remplacer par importLidarCSV si les données sont issues d'un fichier lidar
-    else :
+    if (lidar) :
         fichier, bounds = importLidarCSV(fic,",",modulo)
-        print ("Import : ", time.time() -beginning)
+    else :
+        fichier, bounds = importCSV(fic,",",modulo)
+    print ("Import : ", time.time() -beginning)
     beginning = time.time()
     delny = delaunay2D(fichier)
     print ("Triangulation de Delaunay : ", time.time() -beginning)
@@ -316,4 +316,3 @@ if __name__=='__main__':
     print ("Ecriture obj : ", time.time() -beginning)
     beginning = time.time()
 print ("Temps total : ",time.time()-start)
-

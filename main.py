@@ -32,64 +32,76 @@ def test_format(file):
         return extension,True
 
 
-#Manque la fonction de conversion
-def file_to_run():
+def get_one_or_two(prompt):
     """
-        Fonction qui lance le traitement après vérification du format et
-        conversion si nécessaire, propose de sauvegarder le fichier sur la base
-        de données
-        ARGS : None
-        RETURN : None
+        Fonction pratique permettant de vérifier l'input 1 ou 2 utilisateur.
+        ARGS : le message d'input
+        RETURN : le chiffre choisi
     """
+    while True:
+        try:
+           return int(input(prompt))
+        except KeyError:
+           print ("Choix non valide !")
+           get_one_or_two(prompt)
+
+
+#TODO INPUT SECURE
+def fic_input():
+    lidar = False
     file = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
     extension, run = test_format(file)
     if (not run):
         return
     elif (extension == "csv"):
         CSVFile = file
+        #TODO Fonction d'input secure
+        testLid = get_one_or_two("Est-ce que votre fichier provient d'une acquisition lidar ? (1 : Oui, 2 : Non) : ")
+        if (testLid == 1):
+            lidar = True
     else:
         CSVFile = converter(file,extension)
-    PDALtoVTK.pipeline_VTK(CSVFile,MODULO)
-    rep = int(input("Voulez-vous sauvegarder votre fichier d'entrée sur la base de données ? (1 : Oui, 2 : Non) : "))
-    if (rep == 1):
-        BDDconnexion.set_file(CSVFile,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
+        if (extension == 'las' or extension == 'laz'):
+            lidar = True
+    return CSVFile,lidar
 
 
-#Manque la fonction de conversion
-def file_to_store():
+def file_to_run():
     """
-        Fonction qui sauvegarde le fichier sur la base données après
-        vérification de son format et conversion en CSV
+        Fonction qui lance le traitement sur le fichier souhaité après
+        vérification du format et conversion en CSV si nécessaire.
         ARGS : None
         RETURN : None
     """
-    file = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
-    extension, run = test_format(file)
-    if (not run):
-        return
-    elif (extension == "csv"):
-        CSVFile = file
-    else:
-        CSVFile = converter(file,extension)
-    BDDconnexion.set_file(CSVFile,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
+    CSVFile,lidar = fic_input()
+    PDALtoVTK.pipeline_VTK(CSVFile,lidar)
 
 
+def file_to_store():
+    """
+        Fonction qui sauvegarde le fichier sur la base données après
+        vérification de son format et conversion en CSV si nécessaire
+        ARGS : None
+        RETURN : None
+    """
+    CSVFile,lidar = fic_input()
+    BDDconnexion.set_file(CSVFile,lidar,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
+
+
+#TODO INPUT SECURE
 def run_process():
-    CSVFile = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
-    CSVFile = LOCAL_PATH + CSVFile
-    PDALtoVTK.pipeline_VTK(CSVFile,MODULO)
-    choix = int(input("Voulez-vous enregistrer le rendu OBJ dans la base de données ? (1 : Oui, 2 : Non) : "))
+    CSVFile,lidar,id = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
+    file = LOCAL_PATH + CSVFile
+    PDALtoVTK.pipeline_VTK(file,lidar)
+    #input secure
+    choix = get_one_or_two("Voulez-vous enregistrer le rendu OBJ dans la base de données ? (1 : Oui, 2 : Non) : ")
     if (choix == 1):
         OBJFile = CSVFile[:-3] + 'obj'
-        BDDconnexion.set_file(OBJFile,OBJ_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
-
-
-def view_Unity3D():
-    print("untruc")
+        BDDconnexion.set_file(OBJFile,id,OBJ_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD)
 
 
 def get_CSV_OBJ():
-    choix = int(input("CSV (1) ou OBJ (2) : "))
+    choix = get_one_or_two("CSV (1) ou OBJ (2) : ")
     if (choix == 1):
         BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
     elif (choix == 2):
@@ -98,13 +110,18 @@ def get_CSV_OBJ():
         print("Choix non valide, retour au menu !")
 
 
+#TODO
+def view_Unity3D():
+    print("untruc")
+
+
+#TODO
 def mode_libre():
-    #TODO : faire le parser pour le mode libre
-    return
+    print("untruc")
 
 
 def garbage():
-    choix = int(input("Vous voules récupérer (1) ou ajouter (2) un fichier ? : "))
+    choix = get_one_or_two("Vous voules récupérer (1) ou ajouter (2) un fichier ? : ")
     if (choix == 1):
         BDDconnexion.get_file(GARBAGE_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD)
     elif (choix == 2):
@@ -132,8 +149,8 @@ def menu():
             ['Utiliser un fichier source (local) pour le traiter', lambda : file_to_run()],
             ['Effectuer un traitement sur un fichier existant sur la base de données', lambda : run_process()],
             ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : file_to_store()],
-            ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Récupérer un fichier au format CSV (pré traitement) ou OBJ (post traitement)', lambda : get_CSV_OBJ()],
+            ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Mode libre (Dev)', lambda : mode_libre()],
             ['Stockage Garbage', lambda : garbage()],
             ['Quitter', lambda : quit()]
@@ -141,16 +158,19 @@ def menu():
         for i in range(len(choix)):
             print(str(i+1) + " : " + choix[i][0])
         numChoix = int(input())
-        try:
-            choix[numChoix-1][1]() #Appel de la fonction contenue dans la liste à l'indice donné par l'utilisateur
-        except:
-            print("Echec de la fonction")
+        if (numChoix <= len(choix)):
+            try:
+                choix[numChoix-1][1]() #Appel de la fonction contenue dans la liste à l'indice donné par l'utilisateur
+            except:
+                print("Echec de la fonction")
+        else:
+            print("Choix non valide !")
 
 
 if __name__=='__main__':
     GoOn = True
     config,ALLOWED_FORMATS = read_config()
-    ### Attribution des valeurs aux constantes ###
+    ### Attribution des valeurs aux constantes via fichier de configuration ###
     CSV_PATH = config['PATH']['CSV_PATH']
     OBJ_PATH = config['PATH']['OBJ_PATH']
     LOCAL_PATH = config['PATH']['LOCAL_PATH']
