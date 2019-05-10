@@ -289,6 +289,7 @@ def pipeline_VTK(fic,lidar=False,modulo=1,socleChoix="non"):
     print ("Ecriture obj : ", time.time() -beginning)
     print ("Temps total : ",time.time()-start)
 
+
 if __name__=='__main__':
     modulo = 1000
     print("Modulo : ",modulo)
@@ -315,4 +316,4 @@ if __name__=='__main__':
     exportOBJ(rendered)
     print ("Ecriture obj : ", time.time() -beginning)
     beginning = time.time()
-print ("Temps total : ",time.time()-start)
+    print ("Temps total : ",time.time()-start)

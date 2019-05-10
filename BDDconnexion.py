@@ -83,8 +83,7 @@ def ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
         return None
 
 
-#TODO : faire la reqûete d'ajout sur la BDD
-def set_file(inputFile,lidar,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_USER,BDD_PASSWORD):
+def set_file(inputFile,entries,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT_SSH,PORT_POSTGRES,BDD_USER,BDD_PASSWORD,DATABASE):
     """
         Fonction permettant de déposer un fichier sur le disque dur de la
         raspberry et d'ajouter son entrée dans la base de données.
@@ -96,22 +95,37 @@ def set_file(inputFile,lidar,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,BDD_US
         RETURN : None
     """
     ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
+    ajout_bdd = False
     try:
         scp = SCPClient(ssh.get_transport())
         print("Transfert en cours...")
         scp.put(inputFile, remote_path = hostPath)
         print("...transfert terminé !")
+        ajout_bdd = True
     except:
         print("SCP failed")
     finally:
         scp.close()
         ssh.close()
-    #Création de la requête d'ajout du fichier dans la BDD
-    #make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+    if (ajout_bdd):
+        try:
+            print("Ajout à la base de données...")
+            splitedFile = inputFile.split("/")
+            file = splitedFile[-1] #Récupération du nom de fichier uniquement
+            if (file[-3:]=="csv"):
+                query = "INSERT INTO csv(nom,ex_lidar,planete,commentaires) VALUES ('"+file+"',"+entries[0]+",'"+entries[1]+"','"+entries[2]+"') RETURNING id;"
+                make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+            elif (file[-3:]=="obj"):
+                query = "INSERT INTO obj(id,nom) VALUES ("+entries[0]+",'"+file+"');"
+                make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+            else:
+                print("Le garbage n'est pas ajouté à la BDD")
+        except:
+            print("Ajout à la base données échoué")
 
 
 #TODO : changer la fonction pour utiliser la BDD plutot qu'un 'ls' pour afficher les fichiers dispos
-def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
+def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE):
     """
         Fonction permettant de récupérer un fichier présent sur le disque dur
         de la raspberry et ses informations contenues dans la base de données.
@@ -122,14 +136,17 @@ def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
             Autres : leur nom = leur utilité
         RETURN : le nom du fichier choisi
     """
-    ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
-    shellCom = 'ls '+ hostPath
-    stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
-    print("\nListe des fichiers "+hostPath[-3:]+" sur la BDD :")
-    print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
-    fic = str(input("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant) : "))
-    hostPath += '/'+fic
-    print(hostPath)
+    # ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
+    # shellCom = 'ls '+ hostPath
+    # stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
+    # print("\nListe des fichiers "+hostPath[-3:]+" sur la BDD :")
+    # print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
+    # fic = str(input("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant) : "))
+    # hostPath += '/'+fic
+    # print(hostPath)
+    query = "SELECT id, nom, date_ajout FROM "+hostPath[-3:]+";"
+    res = make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+    print(res)
     try:
         scp = SCPClient(ssh.get_transport())
         print("Téléchargement en cours...")
