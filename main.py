@@ -45,7 +45,6 @@ def get_one_or_two(prompt):
         get_one_or_two(prompt)
 
 
-#TODO INPUT SECURE
 def fic_input():
     lidar = False
     file = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
@@ -86,13 +85,12 @@ def file_to_store():
     CSVFile,lidar = fic_input()
     planete = ""
     while (planete == ""):
-        planete = str(input("De quelle planète ou astre s'agit-il ? : "))
+        planete = str(input("De quelle planète ou astre s'agit-il ? : ")).replace("'"," ")
     commentaires = str(input("Avez-vous des commentaires à ajouter pour ce fichier ? : ")).replace("'"," ")
     entries = [str(lidar),planete,commentaires]
     BDDconnexion.set_file(CSVFile,entries,CSV_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT_SSH,PORT_POSTGRES,BDD_USER,BDD_PASSWORD,DATABASE)
 
 
-#TODO INPUT SECURE
 def run_process():
     CSVFile,lidar,id = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     file = LOCAL_PATH + CSVFile
@@ -108,7 +106,7 @@ def run_process():
 def get_CSV_OBJ():
     choix = get_one_or_two("CSV (1) ou OBJ (2) : ")
     if (choix == 1):
-        BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASED)
+        BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     elif (choix == 2):
         BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     else:
@@ -125,16 +123,16 @@ def mode_libre():
     print("untruc")
 
 
-def garbage():
+def stock():
     choix = get_one_or_two("Vous voules récupérer (1) ou ajouter (2) un fichier ? : ")
     if (choix == 1):
-        BDDconnexion.get_file(GARBAGE_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+        BDDconnexion.get_file(STOCK_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     elif (choix == 2):
-        garbage = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
+        stock = str(input("Veuillez donner le nom du fichier (avec extension) ainsi que son chemin s'il n'est pas dans le dossier courant : "))
         entries = []
-        BDDconnexion.set_file(garbage,entries,GARBAGE_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT_SSH,PORT_POSTGRES,BDD_USER,BDD_PASSWORD,DATABASE)
+        BDDconnexion.set_file(stock,entries,STOCK_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT_SSH,PORT_POSTGRES,BDD_USER,BDD_PASSWORD,DATABASE)
     else:
-        print("Gé pa compri...")
+        print("Choix non valide, retour au menu !")
 
 
 def read_config():
@@ -158,7 +156,7 @@ def menu():
             ['Récupérer un fichier au format CSV (pré traitement) ou OBJ (post traitement)', lambda : get_CSV_OBJ()],
             ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Mode libre (Dev)', lambda : mode_libre()],
-            ['Stockage Garbage', lambda : garbage()],
+            ['Stockage', lambda : stock()],
             ['Quitter', lambda : quit()]
             ]
         for i in range(len(choix)):
@@ -181,7 +179,7 @@ if __name__=='__main__':
     CSV_PATH = config['PATH']['CSV_PATH']
     OBJ_PATH = config['PATH']['OBJ_PATH']
     LOCAL_PATH = config['PATH']['LOCAL_PATH']
-    GARBAGE_PATH = config['PATH']['GARBAGE_PATH']
+    STOCK_PATH = config['PATH']['STOCK_PATH']
     IP_PUBLIQUE = config['SSH']['IP_PUBLIQUE']
     IP_LOCALE = config['SSH']['IP_LOCALE']
     PORT_SSH = int(config['SSH']['PORT_SSH'])
@@ -194,10 +192,4 @@ if __name__=='__main__':
     MODULO = int(config['PROCESS']['MODULO'])
     ###---###
 
-    query = "SELECT id, nom, date_ajout, commentaires FROM CSV;"
-    res = BDDconnexion.make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
-    print("Quel fichier voulez-vous récupérer ? (donnez son Id)")
-    for line in res:
-        print("Id : "+str(line[0])+", nom : "+line[1]+", date d'ajout : "+str(line[2]).replace("datetime.date(","").replace(")","")+", commentaires : "+str(line[3]))
-    id = int(input("C'est à vous : "))
-    # menu()
+    menu()

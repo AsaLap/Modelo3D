@@ -3,6 +3,7 @@ import psycopg2
 from sshtunnel import SSHTunnelForwarder
 import paramiko
 from scp import SCPClient
+import re
 
 def ssh_Tunnel(IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD):
     """
@@ -52,7 +53,6 @@ def make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,
     try:
         print("Requête en cours...")
         res = []
-        print(query)
         curs.execute(query)
         res = curs.fetchall()
         conn.commit()
@@ -119,7 +119,7 @@ def set_file(inputFile,entries,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT
                 query = "INSERT INTO obj(id,nom) VALUES ("+entries[0]+",'"+file+"');"
                 make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
             else:
-                print("Le garbage n'est pas ajouté à la BDD")
+                print("Le stock n'est pas ajouté à la BDD")
         except:
             print("Ajout à la base données échoué")
 
@@ -136,17 +136,46 @@ def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USE
             Autres : leur nom = leur utilité
         RETURN : le nom du fichier choisi
     """
-    # ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
-    # shellCom = 'ls '+ hostPath
-    # stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
-    # print("\nListe des fichiers "+hostPath[-3:]+" sur la BDD :")
-    # print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
-    # fic = str(input("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant) : "))
-    # hostPath += '/'+fic
-    # print(hostPath)
-    query = "SELECT id, nom, date_ajout FROM "+hostPath[-3:]+";"
-    res = make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
-    print(res)
+    ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
+    lidar = False
+    if (hostPath[-3:]=='CSV'):
+        query = "SELECT id, nom, date_ajout, commentaires, ex_lidar FROM CSV;"
+        res = make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+        print("Quel fichier voulez-vous récupérer ? (donnez son Id)")
+        listID = []
+        for line in res:
+            listID.append(line[0])
+            print("Id : "+str(line[0])+", nom : "+line[1]+", date d'ajout : "+str(line[2]).replace("datetime.date(","").replace(")","")+", commentaires : "+str(line[3]))
+        id = 0
+        while (id not in listID):
+            id = int(input("Id choisi : "))
+        for line in res:
+            if (line[0] == id):
+                fic = line[1]
+                lidar = line[4]
+        hostPath += "/" + fic
+    elif (hostPath[-3:]=='OBJ'):
+        query = "SELECT * FROM OBJ;"
+        res = make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+        print("Quel fichier voulez-vous récupérer ? (donnez son Id)")
+        listID = []
+        for line in res:
+            listID.append(line[0])
+            print("Id : "+str(line[0])+", nom : "+line[1]+", date d'ajout : "+str(line[2]).replace("datetime.date(","").replace(")",""))
+        id = 0
+        while (id not in listID):
+            id = int(input("Id choisi : "))
+        for line in res:
+            if (line[0] == id):
+                fic = res[x][1]
+        hostPath += "/" + fic
+    elif (hostPath[-5:]=='STOCK'):
+        shellCom = 'ls '+ hostPath
+        stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
+        print("\nListe des fichiers stockés sur la raspberry :")
+        print(stdout.read().decode('ascii')) #Affichage du résultat de "ls"
+        fic = str(input("Quel fichier voulez-vous récupérer ? (Il sera téléchargé dans le répertoire courant) : "))
+        hostPath += '/'+fic
     try:
         scp = SCPClient(ssh.get_transport())
         print("Téléchargement en cours...")
