@@ -127,7 +127,50 @@ def view_Unity3D():
 
 #TODO
 def mode_libre():
-    print("untruc")
+    libre = True
+    fonctions = ["pipeline_VTK"]
+    nbArgs = {"pipeline_VTK":[2,4]}
+    helpFonctions = {"pipeline_VTK(fic,lidar,socleChoix,modulo)":{"fic":"Le fichier\
+ à traiter (string)","lidar":"Si votre fichier provient d'une acquisition lidar\
+ (True or False)","socleChoix":"Si vous souhaitez un socle, par défaut = 2,\
+ (1 = Oui, 2 = Non)","modulo":"Si vous souhaitez accélérer le traitement en\
+ divisant votre fichier, par défaut = 1 (valeur minimale)"}}
+    print("\"help\" pour avoir de l'aide sur les fonctions disponibles en terminal, \"quit\" pour quitter")
+    while(libre):
+        entry = str(input())
+        if (entry == "help"):
+            for key in helpFonctions:
+                print(key)
+                for args in helpFonctions[key]:
+                    print(args, ":", helpFonctions[key][args])
+        elif (entry == "quit"):
+            libre = False
+        else:
+            splited = entry.split("(")
+            fonc = splited[0]
+            splited.pop(0)
+            splited = splited[0].replace(")","")
+            arguments = splited.split(",")
+            if (fonc in fonctions):
+                if (len(arguments) < nbArgs[fonc][0] or len(arguments) > nbArgs[fonc][1]):
+                    print("Trop ou pas assez d'arguments, "+str(nbArgs[fonc][0])+" argument(s) minimum et "+str(nbArgs[fonc][1])+" argument(s) maximum pour cette fonction.")
+                else:
+                    if (fonc == "pipeline_VTK"):
+                        if (arguments[1] == "True"):
+                            arguments[1] = True
+                        else:
+                            arguments[1] = False
+                        print(arguments)
+                        if (len(arguments) >= 3):
+                            arguments[2] = int(arguments[2])
+                        print(arguments)
+                        if (len(arguments) == 4):
+                            arguments[3] = int(arguments[3])
+                        print("ok")
+                        PDALtoVTK.pipeline_VTK(*arguments)
+            else:
+                print("Fonction non reconnue...")
+
 
 
 def stock():
