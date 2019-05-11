@@ -52,15 +52,15 @@ def checkHeader(lidar, reader) :
     else :
         importList = [0,1,2]
     print ("Veuillez vérifier les paramètres d'import du fichier")
-    print ("en-tête du fichier")
+    print ("En-tête : ")
     print(header)
     a = ["X :","Y :","Z :","Classification :"]
-    print ("les coordonnées utilisées seront : ")
+    print ("Les coordonnées utilisées seront : ")
     for i in range(0,3,1) :
         print (a[i], header[importList[i]])
     regEx = None
     while (regEx == None) :
-        print ("OK ? o/n")
+        print ("OK ? (o/n) :")
         res = input()
         regEx = re.search("[OoNn]", res)
         if (regEx == None) :
@@ -95,16 +95,16 @@ def checkHeader(lidar, reader) :
         importList[res] = header[resChamps]
         for i in importList :
             print (a[i]," : ", header[importList[i]])
-        print ("OK ? o/n")
+        print ("OK ? (o/n) :")
         res = input()
         regEx = None
         regEx = re.search("[OoNn]", res)
         if (regEx == None) :
             print ("erreur de saisie")
-    print ("début du traitement. Veuillez patienter.")
+    print ("Début du traitement. Veuillez patienter.")
     return importList
 
-def importLidarCSV(filename, delimiter, modulo = 0) :
+def importLidarCSV(filename,delimiter,modulo) :
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
@@ -116,11 +116,12 @@ def importLidarCSV(filename, delimiter, modulo = 0) :
                 points.InsertNextPoint(float(row[importList[0]]),float(row[importList[1]]),float(row[importList[2]]))
                 j=j+1
             i = i+1
+    print("Modulo : ",modulo)
     print ("Nombre de points importés  : ",j)
     bounds = points.GetBounds() #renvoie (xmin,xmax,ymin,ymax,zmin,zmax)
     return points, bounds
 
-def importCSV(filename, delimiter,modulo) :
+def importCSV(filename,delimiter,modulo) :
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
@@ -132,6 +133,7 @@ def importCSV(filename, delimiter,modulo) :
                 points.InsertNextPoint(float(row[importList[0]]),float(row[importList[1]]),float(row[importList[2]]))
                 j=j+1
             i = i+1
+    print("Modulo : ",modulo)
     print ("Nombre de points importés  : ",j)
     bounds = points.GetBounds() #renvoie (xmin,xmax,ymin,ymax,zmin,zmax)
     return points, bounds
@@ -260,10 +262,9 @@ def exportOBJ(renWin) :
     obj.Write()
 
 #La même chose que dans le main de ce fichier mais utilisable ailleurs car dans une fonction avec arguments
-def pipeline_VTK(fic,lidar=False,modulo=1,socleChoix="non"):
+def pipeline_VTK(fic,lidar,socleChoix=2,modulo=1):
     beginning = time.time()
     start = beginning
-    print("Modulo : ",modulo)
     if (lidar) :
         fichier, bounds = importLidarCSV(fic,",",modulo)
     else :
@@ -277,10 +278,10 @@ def pipeline_VTK(fic,lidar=False,modulo=1,socleChoix="non"):
     mapped.append(mapping(delny))
     print ("Mapping : ", time.time() -beginning)
     beginning = time.time()
-    if (socleChoix == "oui") : #faire le socle si l'utilisateur l'a demandé
+    if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
         socle = makeSocle(delny,bounds)
         mapped.append(mapping(socle))
-        print ("triangulation + mappingSocle : ", time.time()- beginning)
+        print ("Socle : ", time.time()- beginning)
         beginning = time.time()
     rendered = rendering(mapped)
     print ("Rendering : ", time.time() -beginning)
@@ -288,13 +289,14 @@ def pipeline_VTK(fic,lidar=False,modulo=1,socleChoix="non"):
     exportOBJ(rendered)
     print ("Ecriture obj : ", time.time() -beginning)
     print ("Temps total : ",time.time()-start)
+    return bounds
 
 
 if __name__=='__main__':
     modulo = 1000
     print("Modulo : ",modulo)
     fichier, bounds = initFile() #bounds = liste contenant les min/max sur chaque axe
-    socleChoix = "oui" #choisir si on veut dessiner le socle
+    socleChoix = 1 #choisir si on veut dessiner le socle
     lidar = "non" #choisir entre importCSV et importLidarCSV
     print ("Import : ", time.time() -beginning)
     beginning = time.time()
@@ -305,7 +307,7 @@ if __name__=='__main__':
     mapped.append(mapping(delny))
     print ("Mapping : ", time.time() -beginning)
     beginning = time.time()
-    if (socleChoix == "oui") : #faire le socle si l'utilisateur l'a demandé
+    if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
         socle = makeSocle(delny,bounds)
         mapped.append(mapping(socle))
         print ("triangulation + mappingSocle : ", time.time()- beginning)
