@@ -72,7 +72,9 @@ def file_to_run():
         RETURN : None
     """
     CSVFile,lidar = fic_input()
-    PDALtoVTK.pipeline_VTK(CSVFile,lidar)
+    socle = get_one_or_two("Voulez-vous ajouter un socle au traitement afin de l'imprimer en 3D par la suite ? (1 : Oui, 2 : Non) : ")
+    modulo = int(input("modulo : "))
+    bounds = PDALtoVTK.pipeline_VTK(CSVFile,lidar,socle,modulo)
 
 
 def file_to_store():
@@ -94,12 +96,17 @@ def file_to_store():
 def run_process():
     CSVFile,lidar,id = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     file = LOCAL_PATH + CSVFile
-    PDALtoVTK.pipeline_VTK(file,lidar)
-    #input secure
+    socle = get_one_or_two("Voulez-vous ajouter un socle au traitement afin de l'imprimer en 3D par la suite ? (1 : Oui, 2 : Non) : ")
+    bounds = PDALtoVTK.pipeline_VTK(CSVFile,lidar,socle)
+    query = "update csv set x_min = "+str(bounds[0])+", x_max = "+str(bounds[1])+", y_min = "+str(bounds[2])+", y_max = "+str(bounds[3])+", z_min = "+str(bounds[4])+", z_max = "+str(bounds[5])+" where id="+str(id)+";"
+    print(query)
+    BDDconnexion.make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     choix = get_one_or_two("Voulez-vous enregistrer le rendu OBJ dans la base de données ? (1 : Oui, 2 : Non) : ")
     if (choix == 1):
         OBJFile = CSVFile[:-3] + 'obj'
+        print(OBJFile)
         entries = [str(id)]
+        print(entries)
         BDDconnexion.set_file(OBJFile,entries,OBJ_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT_SSH,PORT_POSTGRES,BDD_USER,BDD_PASSWORD,DATABASE)
 
 
@@ -154,7 +161,7 @@ def menu():
             ['Effectuer un traitement sur un fichier existant sur la base de données', lambda : run_process()],
             ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : file_to_store()],
             ['Récupérer un fichier au format CSV (pré traitement) ou OBJ (post traitement)', lambda : get_CSV_OBJ()],
-            ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
+            # ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Mode libre (Dev)', lambda : mode_libre()],
             ['Stockage', lambda : stock()],
             ['Quitter', lambda : quit()]
