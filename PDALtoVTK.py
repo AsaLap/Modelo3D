@@ -11,13 +11,7 @@ import csv
 import time
 import subprocess
 import os
-
-from vtk import *
-import csv
-import time
 import re
-import subprocess
-import os
 
 beginning = time.time()
 start = beginning
@@ -26,9 +20,14 @@ def initFile():
     file = input("Entrez le nom du fichier (sans l'extension): ")
     format= input("L'extension du fichier ? : ")
     finput=file+'.'+format
+    socle = input("Voulez-vous un socle ? o/n : ")
     if format=='csv':
-        print("Vous utilisez importCSV")
+        print ("les gros fichiers peuvent être long a traiter. Indiquez une résolution")
+        modulo = input()
+        modulo = int(modulo)
         fichier,bounds = importCSV(finput,",",modulo)
+    elif format == 'obj':
+        fichier,bounds = importOBJ(finput)
     else:
         fileoutput=input("Quel nom voulez vous donnez a votre fichier en sortie: ")
         output=fileoutput+'.csv'
@@ -42,7 +41,7 @@ def initFile():
             fichier, bounds = importLidarCSV(output,",", modulo)
         else :
             fichier, bounds = importCSV(output,",", modulo)
-    return fichier, bounds
+    return fichier, bounds, socle, format
 
 beginning = time.time()
 def checkHeader(lidar, reader) :
@@ -138,6 +137,12 @@ def importCSV(filename,delimiter,modulo) :
     bounds = points.GetBounds() #renvoie (xmin,xmax,ymin,ymax,zmin,zmax)
     return points, bounds
 
+def importOBJ(filename) :
+    importer = vtkOBJReader()
+    importer.SetFileName("essai.obj")
+    bounds = importer.GetOutput().GetBounds()
+    return importer, bounds
+
 #triangulation
 def delaunay2D(points) :
     profile = vtkPolyData()
@@ -162,6 +167,7 @@ def bordures(delny, bounds) :
     edges.NonManifoldEdgesOff()
     edges.SetInputConnection(delny.GetOutputPort())
     edges.Update()
+    print (edges.GetOutput())
 
     #Séparer les bordures en 4 cotés pour faire les faces.
     #On récupère les points qui sont dans des cylindres centrés sur le milieu de chaque coté
@@ -293,25 +299,24 @@ def pipeline_VTK(fic,lidar,socleChoix=2,modulo=1):
 
 
 if __name__=='__main__':
-    modulo = 1000
-    print("Modulo : ",modulo)
-    fichier, bounds = initFile() #bounds = liste contenant les min/max sur chaque axe
-    socleChoix = 1 #choisir si on veut dessiner le socle
-    lidar = "non" #choisir entre importCSV et importLidarCSV
+    fichier, bounds, socle, format = initFile() #bounds = liste contenant les min/max sur chaque axe
     print ("Import : ", time.time() -beginning)
     beginning = time.time()
-    delny = delaunay2D(fichier)
-    print ("Triangulation de Delaunay : ", time.time() -beginning)
-    beginning = time.time()
     mapped = []
-    mapped.append(mapping(delny))
-    print ("Mapping : ", time.time() -beginning)
-    beginning = time.time()
-    if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
-        socle = makeSocle(delny,bounds)
-        mapped.append(mapping(socle))
-        print ("triangulation + mappingSocle : ", time.time()- beginning)
+    if format !='obj' :
+        delny = delaunay2D(fichier)
+        print ("Triangulation de Delaunay : ", time.time() -beginning)
         beginning = time.time()
+        mapped.append(mapping(delny))
+        print ("Mapping : ", time.time() -beginning)
+        beginning = time.time()
+        if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
+            socle = makeSocle(delny,bounds)
+            mapped.append(mapping(socle))
+            print ("triangulation + mappingSocle : ", time.time()- beginning)
+            beginning = time.time()
+    else :
+        mapped.append(mapping(fichier))
     rendered = rendering(mapped)
     print ("Rendering : ", time.time() -beginning)
     beginning = time.time()
