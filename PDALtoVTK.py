@@ -10,9 +10,6 @@ import re
 beginning = time.time()
 start = beginning
 
-
-
-
 beginning = time.time()
 def checkHeader(lidar, reader) :
     """
@@ -160,19 +157,17 @@ def delaunay2D(points) :
     delny.Update()
     return delny
 
-def bordures(delny, bounds) :
+def bordures(delny, bounds, hauteurSocle) :
     """
     Fonction permettant de créer les arêtes du socle
     ARGS : delny : objet vtkPolydata
               bounds : liste contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+              hauteurSocle : float contenant l'épaisseur du socle
     RETURN : points : objet vtkPoint contenant les coordonnées des points importés
              faceList : liste de vtkPoints. Chaque vtkPoint contient les coordonnées des points
              correspondant à une face du socle
     """
-#bounds renvoie (xmin,xmax,ymin,ymax,zmin,zmax)
-    zmin = bounds[4]
-    zmax = bounds[5]
-    hauteurSocle = zmin -((zmax-zmin)/2)
+
     #extraire les bordures du terrain
     edges = vtkFeatureEdges()
     edges.BoundaryEdgesOn()
@@ -239,14 +234,15 @@ def bordures(delny, bounds) :
             faceList[i].InsertNextPoint(tmp[0],tmp[1],tmp[2])
     return faceList
 
-def makeSocle(delny,bounds) :
+def makeSocle(delny,bounds, hauteurSocle) :
     """
     Fonction permettant de trianguler les faces du socle
     ARGS : delny : objet vtkpolyData
            bounds : liste contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+           hauteurSocle : float contenant la l'épaisseur du socle
     RETURN : objet vtkPolyData contenant les 5 faces triangulées du socle
     """
-    faceList = bordures(delny,bounds)
+    faceList = bordures(delny,bounds, hauteurSocle)
     socle = vtkAppendPolyData() #objet utilisé pour grouper les triangulations du socle en un seul objet
     for i in range (0,len(faceList),1) :
         delny = delaunay2D(faceList[i])
@@ -330,7 +326,32 @@ def pipeline_VTK(fic,lidar,socleChoix=2,modulo=1):
         print ("Mapping : ", time.time() -beginning)
         beginning = time.time()
         if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
-            socle = makeSocle(delny,bounds)
+            print ("Par défaut, l'épaisseur du socle correspond à la moitié de la hauteur du terrain")
+            regEx = None
+            print ("Voulez-vous changer l'épaisseur? o/n")
+            while (regEx == None) :
+                choix = input()
+                choix = choix.lower()
+                regEx = re.search("[on]", choix)
+                if (regEx == None) :
+                    print ("erreur de saisie. Recommencez")
+            if choix == 'o' :
+                print ("Entrez la valeur choisie")
+                hauteurSocle = input()
+                a = 0
+                while a == 0 :
+                    a = 1
+                    try :
+                        hauteurSocle = float(hauteurSocle)
+                        print (hauteurSocle)
+                    except :
+                        print ('erreur de saisie. Recommencez.')
+                        a = 0
+            if choix == 'n' :
+                zmin = bounds[4]
+                zmax = bounds[5]
+                hauteurSocle = zmin -((zmax-zmin)/2)  
+            socle = makeSocle(delny,bounds, hauteurSocle)
             mapped.append(mapping(socle))
             print ("Socle : ", time.time()- beginning)
             beginning = time.time()
