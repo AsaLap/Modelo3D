@@ -18,7 +18,7 @@ def converter(file,extension):
     """
     print("Conversion du fichier en CSV...")
     try:
-        convertedFile = LOCAL_PATH+file.replace(extension,"")+"obj"
+        convertedFile =file.replace(extension,"")+"csv"
         subprocess.call(["pdal","translate","-i",file,"-o",convertedFile])
         print("...conversion réussie !")
     except:
