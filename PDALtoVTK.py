@@ -339,7 +339,7 @@ def pipeline_VTK(fic,lidar,socleChoix=2,modulo=1):
     rendered = rendering(mapped)
     print ("Rendering : ", time.time() -beginning)
     beginning = time.time()
-    exportOBJ(rendered)
+    exportOBJ(rendered, fic[-1:])
     print ("Ecriture obj : ", time.time() -beginning)
     print ("Temps total : ",time.time()-start)
     return bounds
