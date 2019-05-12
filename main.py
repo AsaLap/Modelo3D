@@ -315,20 +315,20 @@ if __name__=='__main__':
     config,ALLOWED_FORMATS = read_config()
 
     ### Attribution des valeurs aux constantes via fichier de configuration ###
-    CSV_PATH = config['PATH']['CSV_PATH']
-    OBJ_PATH = config['PATH']['OBJ_PATH']
-    LOCAL_PATH = config['PATH']['LOCAL_PATH']
-    STOCK_PATH = config['PATH']['STOCK_PATH']
-    IP_PUBLIQUE = config['SSH']['IP_PUBLIQUE']
-    IP_LOCALE = config['SSH']['IP_LOCALE']
-    PORT_SSH = int(config['SSH']['PORT_SSH'])
-    PORT_POSTGRES = int(config['SSH']['PORT_POSTGRES'])
-    USER = config['SSH']['USER']
-    PASSWORD = config['SSH']['PASSWORD']
-    BDD_USER = config['BDD']['BDD_USER']
-    BDD_PASSWORD = config['BDD']['BDD_PASSWORD']
-    DATABASE = config['BDD']['DATABASE']
-    MODULO = int(config['PROCESS']['MODULO'])
+    CSV_PATH = config['PATH']['CSV_PATH'] #Path Raspberry pour les fichiers CSV
+    OBJ_PATH = config['PATH']['OBJ_PATH'] #Path Raspberry pour les fichiers OBJ
+    LOCAL_PATH = config['PATH']['LOCAL_PATH'] #Path local pour les fichiers
+    STOCK_PATH = config['PATH']['STOCK_PATH'] #Path Raspberry pour les fichiers stock
+    IP_PUBLIQUE = config['SSH']['IP_PUBLIQUE'] #IP publique de la Rapsberry
+    IP_LOCALE = config['SSH']['IP_LOCALE'] #IP locale de la Rapsberry
+    PORT_SSH = int(config['SSH']['PORT_SSH']) #Port ssh de la Raspberry
+    PORT_POSTGRES = int(config['SSH']['PORT_POSTGRES']) #Port PostgreSQL de la Raspberry
+    USER = config['SSH']['USER'] #User Raspbian
+    PASSWORD = config['SSH']['PASSWORD'] #Password du user Raspbian
+    BDD_USER = config['BDD']['BDD_USER'] #User Postgres
+    BDD_PASSWORD = config['BDD']['BDD_PASSWORD'] #Password du user Postgres
+    DATABASE = config['BDD']['DATABASE'] #La base de données
+    MODULO = int(config['PROCESS']['MODULO']) #Le modulo pour le traitement
     ###---###
 
     menu()

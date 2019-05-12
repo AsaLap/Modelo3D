@@ -10,7 +10,7 @@ def ssh_Tunnel(IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD):
         Fonction permettant de mettre en place un tunnel SSH afin de rediriger
         les ports locaux et distants pour faire des requêtes sur la base de
         données
-        ARGS : None
+        ARGS : Cf. main.py
         RETURN : Le tunnel
     """
     ###Connexion par tunnel SSH à la raspberry et redirection des ports en local
@@ -33,7 +33,9 @@ def ssh_Tunnel(IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD):
 def make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE):
     """
         Fonction permettant de faire des requêtes sur la base de données
-        ARGS : la query de la requête SQL
+        ARGS :
+            query : la query de la requête SQL
+            Autres : Cf. main.py
         RETURN : une liste contenant les résultats de la requête
     """
     tunnel = ssh_Tunnel(IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD)
@@ -69,7 +71,7 @@ def make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,
 def ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD):
     """
         Fonction permettant de mettre en place une connexion SSH pour le SCP
-        ARGS : none
+        ARGS : Cf. main.py
         RETURN : la connexion SSH
     """
     try:
@@ -90,8 +92,7 @@ def set_file(inputFile,entries,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT
         ARGS :
             inputFile : le fichier à déposer
             hostPath : le dossier dans lequel aller déposer ce fichier
-            IP_PUBLIQUE : l'IP publique de la raspberry
-            Autres : leur nom = leur utilité
+            Autres : Cf. main.py
         RETURN : None
     """
     ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
@@ -132,8 +133,7 @@ def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USE
         ARGS :
             hostPath : le chemin d'accès aux fichiers sur la raspberry
             localPath : le chemin local où télécharger ces fichiers
-            IP_PUBLIQUE : l'IP publique de la raspberry
-            Autres : leur nom = leur utilité
+            Autres : Cf. main.py
         RETURN : le nom du fichier choisi
     """
     ssh = ssh_connect(IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD) #Mise en place de la connexion
