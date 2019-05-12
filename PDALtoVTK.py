@@ -1,11 +1,5 @@
 #!/usr/bin/python
 
-#pour transformer des fichiers en csv :
-#import pdal (à installer avec anaconda/miniconda, ne marche pas avec pip)
-#pdal translate -i <fichierAImporter> -o <output.csv>
-
-# FICHIERS ISSUS D'UN LIDAR : utiliser importLidarCSV() et pas importCSV()
-
 from vtk import *
 import csv
 import time
@@ -16,7 +10,16 @@ import re
 beginning = time.time()
 start = beginning
 
+
 def initFile():
+    """
+        Fonction qui choisit le type de fonction d'import à utiliser en fonction de l'extension du fichier donné par l'utilisateur
+        ARGS : None
+        RETURN : fichier : objet vtkPoint() contenant les coordonnées des points à traiter
+                 bounds : liste contenant les valeurs maximales et minimales sur les trois axes (x,y,z)
+                 socle : int indiquant si le socle doit être calculer ou pas (1 = oui, 2 = non)
+                 format : chaine de caractères donnant l'extension du fichier
+    """
     file = input("Entrez le nom du fichier (sans l'extension): ")
     format= input("L'extension du fichier ? : ")
     finput=file+'.'+format
@@ -45,6 +48,12 @@ def initFile():
 
 beginning = time.time()
 def checkHeader(lidar, reader) :
+    """
+    Fonction demandant à l'utilisateur de vérifier que les champs à importer sont bien les bons
+    ARGS : lidar : int indiquant si les données proviennent de la télédétection lidar ou pas (1 oui, 2 non)
+           reader : objet reader du module import CSV
+    RETURN : liste de int indiquant les index des champs à importer
+    """
     header = next(reader)
     if (lidar == "oui") :
         importList = [0,1,2,8]
@@ -104,6 +113,16 @@ def checkHeader(lidar, reader) :
     return importList
 
 def importLidarCSV(filename,delimiter,modulo) :
+    """
+    Fonction permettant de d'importer les données d'un fichier CSV dans un objet vktPoints(). 
+    Elle n'importe que les points correspondant à l'élévation du sol (classification = 2). 
+    Elle ne fonctionne que pour les fichiers issus de la télédétection Lidar.
+    ARGS : filename : chaine de caracère contenant le nom du fichier
+        delimiter : caractère séparant les champs du CSV
+        modulo : int indiquant la résolution de la visualisation. ex : modulo = 10 -> 1 point sur 10 sera importer
+    RETURN : points : objet vtkPoint contenant les coordonnées des points importés
+             bounds : liste contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+    """
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
@@ -121,6 +140,15 @@ def importLidarCSV(filename,delimiter,modulo) :
     return points, bounds
 
 def importCSV(filename,delimiter,modulo) :
+    """
+    Fonction permettant d'importer les données d'un fichier CSV dans un objet vktPoints().
+    Elle ne doit pas être utilisé pour les fichiers issus de la télédétection Lidar. 
+    ARGS : filename : chaîne de caractères contenant le nom du fichier
+        delimiter : caractère séparant les champs du CSV
+        modulo : int indiquant résolution de la visualisation. ex : modulo = 10 -> 1 point sur 10 sera importer
+    RETURN : points : objet vtkPoint contenant les coordonnées des points importés
+             bounds : liste de float contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+    """
     points = vtkPoints()
     with open(filename, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter, quotechar='|')
@@ -138,13 +166,25 @@ def importCSV(filename,delimiter,modulo) :
     return points, bounds
 
 def importOBJ(filename) :
+    """
+    Fonction permettant de d'importer les données d'un fichier OBJ dans un objet vtkPolyData. 
+    ARGS : filename : chaine de caractères indiquant le nom du fichier
+        delimiter : caractère séparant les champs du CSV
+    RETURN : points : objet vtkPolyData contenant la géométrie de l'objet (vertices,...)
+             bounds : liste de float contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+    """
     importer = vtkOBJReader()
-    importer.SetFileName("essai.obj")
+    importer.SetFileName(filename)
     bounds = importer.GetOutput().GetBounds()
     return importer, bounds
 
 #triangulation
 def delaunay2D(points) :
+    """
+    Triangule un objet vtkPoints selon la triangulation de Delaunay.
+    ARGS : points : objet vtkPoint.
+    RETURN : delny : objet vtkPolyData
+    """
     profile = vtkPolyData()
     profile.SetPoints(points)
     delny = vtkDelaunay2D()
@@ -153,8 +193,15 @@ def delaunay2D(points) :
     delny.Update()
     return delny
 
-#ExtractEdges
 def bordures(delny, bounds) :
+    """
+    Fonction permettant de créer les arêtes du socle 
+    ARGS : delny : objet vtkPolydata
+              bounds : liste contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+    RETURN : points : objet vtkPoint contenant les coordonnées des points importés
+             faceList : liste de vtkPoints. Chaque vtkPoint contient les coordonnées des points
+             correspondant à une face du socle
+    """
 #bounds renvoie (xmin,xmax,ymin,ymax,zmin,zmax)
     zmin = bounds[4]
     zmax = bounds[5]
@@ -226,6 +273,12 @@ def bordures(delny, bounds) :
     return faceList
 
 def makeSocle(delny,bounds) :
+    """
+    Fonction permettant de trianguler les faces du socle
+    ARGS : delny : objet vtkpolyData
+           bounds : liste contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+    RETURN : objet vtkPolyData contenant les 5 faces triangulées du socle
+    """
     faceList = bordures(delny,bounds)
     socle = vtkAppendPolyData() #objet utilisé pour grouper les triangulations du socle en un seul objet
     for i in range (0,len(faceList),1) :
@@ -234,6 +287,11 @@ def makeSocle(delny,bounds) :
     return socle
 
 def mapping(delny) :
+    """
+    Fonction permettant de faire le mapping d'un objet vtkPolyData
+    ARGS : vtkPolyData
+    RETURN : vtkActor
+    """
     mapMesh = vtkPolyDataMapper()
     mapMesh.SetInputConnection(delny.GetOutputPort())
     meshActor = vtkActor()
@@ -243,6 +301,11 @@ def mapping(delny) :
 
 #rendering
 def rendering(mapped) :
+    """
+    Fonction permettant de visualiser une liste de vtkActor
+    ARGS : mapped : liste de vtkActor
+    RETURN : renWin : fenêtre de visualisation vtkRenderWindow
+    """
     ren = vtkRenderer()
     renWin = vtkRenderWindow()
     renWin.AddRenderer(ren)
@@ -260,15 +323,27 @@ def rendering(mapped) :
     iren.Start()
     return renWin
 
-#export au format OBJ
-def exportOBJ(renWin) :
+def exportOBJ(renWin, filename) :
+    """
+    Fonction permettant d'exporter au format Wavefront OBJ une fenêtre de visualisation
+    ARGS : renWin : vtkRenderWindow
+           filename : chaîne de caractères contenant le nom du fichier obj
+    RETURN : None
+    """
     obj = vtkOBJExporter()
-    obj.SetFilePrefix("essai")
+    obj.SetFilePrefix(filename)
     obj.SetRenderWindow(renWin)
     obj.Write()
 
-#La même chose que dans le main de ce fichier mais utilisable ailleurs car dans une fonction avec arguments
 def pipeline_VTK(fic,lidar,socleChoix=2,modulo=1):
+    """ 
+    Fonction permettant de faire l'ensemble du traitement.
+    ARGS :  fic : chaîne de caractère contenant le nom du fichier
+            lidar : int indiquant si le fichier est isssu de la télédétection lidar
+            socleChoix : int indiquant si le socle doit être créer ou pas
+            modulo : int indiquant la résolution à prendre en compte
+    RETURN : bounds : liste contenant [xmin,xmax,ymin, ymax,zmin,zmax]
+    """
     beginning = time.time()
     start = beginning
     if (lidar) :
@@ -328,4 +403,4 @@ if __name__=='__main__':
     exportOBJ(rendered)
     print ("Ecriture obj : ", time.time() -beginning)
     beginning = time.time()
-    print ("Temps total : ",time.time()-start)
+print ("Temps total : ",time.time()-start)
