@@ -1,0 +1,257 @@
+<MainMenu@Screen>:
+    name:"main"
+    hideable:hideable
+    test:test
+    BoxLayout:
+        orientation:'horizontal'
+        
+        BoxLayout:
+            size_hint:(.3,1)
+            orientation:'vertical'  
+            Button:
+                text:'file_to_run'
+                on_press: root.display_FTR()
+            Button:
+                text:'run_process'
+                on_press: root.display_RP()
+            Button:
+                text:'file_to_store'
+                on_press: root.manager.current="fts"
+            Button:
+                text:'view'
+                on_press: root.manager.current="vw"
+            Button:
+                text:'get_csv_OBJ'
+                on_press: root.manager.current="gso"
+            Button:
+                text:'mode_libre'
+                on_press: root.manager.current="ml"
+            Button:
+                text:'garbage'
+                on_press: root.manager.current="grb"
+            QuitButton
+
+        FloatLayout:
+            id:hideable
+            size_hint:(.6,1)
+            Label:
+                id:test
+                size_hint:(.5,.5)
+                pos_hint:{'center_x':.45,'center_y':.9}
+                text:" Ceci est une application permettant la modélisation 3D \n d'un terrain grâce au langage de programmation \n Pyhton et de la bibliothèque VTK. \n Plusieurs options vous sont proposées afin de manipuler \n vos fichiers"
+
+
+
+
+<File_to_run@BoxLayout>:
+    orientation:'vertical'
+    size_hint:(.9,.7)
+    pos_hint:{'center_x':.5,'center_y':.5}
+    nom_fichier:nom_fichier
+    result_spinner:result_spinner
+    BoxLayout:
+        pos_hint:{'center_x':.5,'center_y':.5}
+        canvas:
+            Color:
+                rgb: (.7, .7, .7)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+    BoxLayout:
+        size_hint:(.9,None)
+        height:'48dp'
+        orientation:'horizontal'
+        pos_hint:{'center_x':.5,'center_y':.8}
+        canvas:
+            Color:
+                rgb: (.5, .5, .5)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text:"Fichier à utiliser (chemin d'accès complet si le fichier n'est \npas dans le répertoire courant) "
+            font_size:'12 dp'
+            size_hint:(.5,.5)
+            pos_hint:{'center_x':.1,'center_y':.5}
+        TextInput:  
+            id:nom_fichier              
+            text_hint:'chemin complet'
+            size_hint:(.5,1)
+    BoxLayout:
+        orientation:'horizontal'
+        size_hint:(.9,None)
+        height:'48dp'
+        pos_hint:{'center_x':.5,'center_y':.5}
+        canvas:
+            Color:
+                rgb: (.5, .5, .5)
+            Rectangle:
+                pos:self.pos
+                size: (self.width*1.01,self.height*1.15)
+        Label:
+            text:'Voulez-vous enregistrer ?'
+            pos_hint:{'center_x':.5,'center_y':.6}
+        Spinner:
+            id:result_spinner
+            text:'Oui'
+            values:('Oui','Non')
+            size_hint_y:.8
+            pos_hint:{'center_x':.5,'center_y':.55}
+    Button:
+        text:'Valider'
+        height:'48dp'
+        size_hint:(.25,.15)
+        pos_hint:{'center_x':.85,'center_y':.2}
+        on_press:root.test_result()
+        on_press: root.clear_widgets()
+
+    Button:
+        size_hint:(.2,.1)
+        text:'return'
+        on_press: root.clear_widgets()
+        pos_hint:{'center_x':.15,'center_y':.1}
+        
+
+
+<Run_process@FloatLayout>:
+    name:"rp"
+    orientation:'vertical'
+    size_hint:(.7,.3)
+    pos_hint:{'center_x':.5,'center_y':.5}
+    chk_male:chk_male
+    chk_female:chk_female
+    BoxLayout:
+        orientation:'vertical'
+        pos_hint:{'center_x':.5,'center_y':.5}
+        canvas:
+            Color:
+                rgb: (.6, .6, .6)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        BoxLayout:
+            size_hint:(.6,.4)
+            pos_hint:{'center_x':.5,'center_y':.5}
+            Label:
+                text:'Désirez-vous sauvegarder ?'
+                font_size:'18dp'
+        BoxLayout:
+
+            orientation:'horizontal'
+            canvas:
+                Color:
+                    rgb: (.4, .4, .4)
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            BoxLayout:        
+                orientation:'vertical'
+                size_hint:(.5,.2)
+                pos_hint:{'center_x':.5,'center_y':.5}
+                
+                Label:
+                    text: 'Oui'
+                    halign:'center'
+                    pos_hint_y:.9
+
+                CheckBox:
+                    group: 'check' #défini le groupe de la boite
+                    id : chk_male
+                    pos_hint_y:.3
+
+            BoxLayout:
+                orientation:'vertical'
+                size_hint:(.5,.2)
+                pos_hint:{'center_x':.5,'center_y':.5}
+                
+                Label:
+                    text: 'Non'
+                    halign:'center'
+                    pos_hint_y:.9
+                
+                CheckBox:
+                    group:'check'
+                    id : chk_female
+                    pos_hint_y:.3
+            Button:
+                text:'OK'
+                on_press:root.return_choice()
+                on_press: root.clear_widgets()
+                pos_hint:{'center_x':.5,'center_y':.45}
+                size_hint:(.2,.2)
+            
+            
+        Button:
+            text:'return'
+            size_hint:(.2,.2)
+            on_press: root.clear_widgets()
+
+<File_to_store@Screen>:
+    name:"fts"
+    BoxLayout:
+        Button:
+            text:'return'
+            on_press: root.manager.current="main"
+
+<View@Screen>:
+    name:"vw"
+    BoxLayout:
+        Button:
+            text:'return'
+            on_press: root.manager.current="main"
+
+<Get_csv_obj@Screen>:
+    name:"gso"
+    BoxLayout:
+        Button:
+            text:'return'
+            on_press: root.manager.current="main"
+
+<Mode_libre@Screen>:
+    name:"ml"
+    BoxLayout:
+        Button:
+            text:'return'
+            on_press: root.manager.current="main"
+
+<Garbage@Screen>:
+    name:"grb"
+    BoxLayout:
+        Button:
+            text:'return'
+            on_press: root.manager.current="main"
+
+<QuitButton>:
+    text:'QUIT'
+    on_press: root._sure()
+
+<Quit@Popup>:
+
+    auto_dismiss:False
+    title: "" 
+    separator_height: 0  
+    size_hint:(None,None)
+    size:(400,200)
+
+    BoxLayout:
+        orientation:'vertical'
+
+        Label:
+            center_x: root.center_x
+            center_y: root.center_y
+            text: 'Are you sure you want to exit?'
+
+        BoxLayout:
+            orientation:'horizontal'
+            size_hint_y:.4
+
+            Button:
+                text:'Yes'
+                size:(40,20)
+                on_press:root._quit()
+
+            Button:
+                text:'No'
+                size:(40,20)
+                on_press:root.dismiss()
