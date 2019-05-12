@@ -94,6 +94,11 @@ def file_to_store():
 
 
 def run_process():
+    """
+        Fonction...
+        ARGS :
+        RETURN :
+    """
     CSVFile,lidar,id = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     file = LOCAL_PATH + CSVFile
     socle = get_one_or_two("Voulez-vous ajouter un socle au traitement afin de l'imprimer en 3D par la suite ? (1 : Oui, 2 : Non) : ")
@@ -111,6 +116,11 @@ def run_process():
 
 
 def get_CSV_OBJ():
+    """
+        Fonction...
+        ARGS :
+        RETURN :
+    """
     choix = get_one_or_two("CSV (1) ou OBJ (2) : ")
     if (choix == 1):
         BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
@@ -120,13 +130,44 @@ def get_CSV_OBJ():
         print("Choix non valide, retour au menu !")
 
 
+def viewOBJ_VTK():
+    """
+        Fonction permettant de passer d'un fichier OBJ (post-traitement) à une
+        visualisation avec la bibliothèque VTK.
+        ARGS : None
+        RETURN : None
+    """
+    choix = get_one_or_two("Utiliser un fichier local (1) ou enregistré sur la base de données (2) : ")
+    if (choix == 1):
+        fic = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
+    elif (choix == 2):
+        fic,lidar,id = BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+        fic = LOCAL_PATH + fic
+    extension,go = test_format(fic)
+    print(extension)
+    if (go):
+        PDALtoVTK.pipeline_VTK(fic,lidar,2)
+
+
 #TODO
 def view_Unity3D():
-    print("untruc")
+    """
+        Fonction permettant de passer d'un fichier OBJ (post-traitement) à une
+        visualisation avec la bibliothèque Unity3D.
+        NB : Fonction non implémentée.
+        ARGS : None
+        RETURN : None
+    """
+    return null
 
 
-#TODO
 def mode_libre():
+    """
+        Fonction permettant de taper des commande directement dans terminal.
+        NB : Une seule fonction actuellement, pipeline_VTK().
+        ARGS : None
+        RETURN : None
+    """
     libre = True
     fonctions = ["pipeline_VTK"]
     nbArgs = {"pipeline_VTK":[2,4]}
@@ -204,6 +245,7 @@ def menu():
             ['Effectuer un traitement sur un fichier existant sur la base de données', lambda : run_process()],
             ['Ajouter un fichier source pour l\'enregistrer dans le base de données', lambda : file_to_store()],
             ['Récupérer un fichier au format CSV (pré traitement) ou OBJ (post traitement)', lambda : get_CSV_OBJ()],
+            ['Visualiser un fichier OBJ via VTK', lambda : viewOBJ_VTK()],
             # ['Visualiser un maillage (post-traitement) via Unity3D', lambda : view()],
             ['Mode libre (Dev)', lambda : mode_libre()],
             ['Stockage', lambda : stock()],
