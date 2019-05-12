@@ -1,19 +1,30 @@
 #coding : utf-8
 #Fichier principal du projet Modelo3D
+#Auteurs : Charlotte André, Aimée Bienvenu, Claire Delecrin, Antoine Laporte, Jérémie Pajole
 
 import BDDconnexion
 import PDALtoVTK
 import configparser
+import subprocess
 
 
 def converter(file,extension):
+    """
+        Fonction permettant de convertir les fichiers prit en charge par PDAL en csv.
+        ARGS :
+            file : le fichier non csv
+            extension : l'extension de file
+        RETURN : le fichier converti
+    """
     print("Conversion du fichier en CSV...")
     try:
-        #TODO : conversion avec PDAL
+        convertedFile = LOCAL_PATH+file.replace(extension,"")+"obj"
+        subprocess.call(["pdal","translate","-i",file,"-o",convertedFile])
         print("...conversion réussie !")
     except:
+        convertedFile = None
         print("...conversion échouée !")
-    return fileConvertie
+    return convertedFile
 
 
 def test_format(file):
@@ -46,6 +57,15 @@ def get_one_or_two(prompt):
 
 
 def fic_input():
+    """
+        Fonction permettant l'entrée d'un fichier par l'utilisateur, qui le
+        converti en CSV si nécessaire après avoir vérifier que son format était
+        pris en charge.
+        ARGS : None
+        RETURN :
+            CSVFile : le fichier converti (ou de base si c'était un .csv)
+            lidar : un booléen indiquant si le fichier provient d'une acquisition lidar
+    """
     lidar = False
     file = str(input("Quel fichier voulez-vous utiliser (chemin d'accès complet si pas dans le répertoire courant) : "))
     extension, run = test_format(file)
@@ -95,9 +115,10 @@ def file_to_store():
 
 def run_process():
     """
-        Fonction...
-        ARGS :
-        RETURN :
+        Fonction prenant un fichier de la base de données pour le traiter avec
+        la bilbiothèque VTK.
+        ARGS : None
+        RETURN : None
     """
     CSVFile,lidar,id = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     file = LOCAL_PATH + CSVFile
@@ -117,9 +138,10 @@ def run_process():
 
 def get_CSV_OBJ():
     """
-        Fonction...
-        ARGS :
-        RETURN :
+        Fonction qui permet à l'utilisateur de récupérer un fichier sur la
+        rapsberry (CSV ou OBJ).
+        ARGS : None
+        RETURN : None
     """
     choix = get_one_or_two("CSV (1) ou OBJ (2) : ")
     if (choix == 1):
@@ -213,8 +235,13 @@ def mode_libre():
                 print("Fonction non reconnue...")
 
 
-
 def stock():
+    """
+        Fonction de stockage sur la Raspberry, autre que CSV et OBJ. Permet
+        l'échange de fichier lourds entre membres du projet.
+        ARGS : None
+        RETURN : None
+    """
     choix = get_one_or_two("Vous voules récupérer (1) ou ajouter (2) un fichier ? : ")
     if (choix == 1):
         BDDconnexion.get_file(STOCK_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
@@ -227,6 +254,15 @@ def stock():
 
 
 def read_config():
+    """
+        Fonction de lecture du fichier de configuration.
+        ARGS : None
+        RETURN :
+            config : le résultat du reader de config (type dictionnaire) avec
+            toutes les variables utiles
+            ALLOWED_FORMATS : une liste des formats pris en charge par la
+            bilbiothèque PDAL
+    """
     config = configparser.ConfigParser()
     config.read('modelo.ini')
     ALLOWED_FORMATS = config['FORMATS']['ALLOWED_FORMATS'].split(',')
@@ -234,11 +270,22 @@ def read_config():
 
 
 def quit():
+    """
+        Fonction permettant de quitter le menu.
+        ARGS : None
+        RETURN : None (modification d'une global)
+    """
     global GoOn
     GoOn = False
 
 
 def menu():
+    """
+        Fonction du menu général du main, présentant les différents choix
+        s'offrant à l'utilisateur.
+        ARGS : None
+        RETURN : None
+    """
     while (GoOn):
         choix = [
             ['Utiliser un fichier source (local) pour le traiter', lambda : file_to_run()],
