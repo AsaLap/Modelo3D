@@ -273,22 +273,27 @@ def pipeline_VTK(fic,lidar,socleChoix=2,modulo=1):
     start = beginning
     if (lidar) :
         fichier, bounds = importLidarCSV(fic,",",modulo)
+    elif (fic[-3:] == "obj"):
+        fichier, bounds = importOBJ(fic)
     else :
         fichier, bounds = importCSV(fic,",",modulo)
     print ("Import : ", time.time() -beginning)
     beginning = time.time()
-    delny = delaunay2D(fichier)
-    print ("Triangulation de Delaunay : ", time.time() -beginning)
-    beginning = time.time()
     mapped = []
-    mapped.append(mapping(delny))
-    print ("Mapping : ", time.time() -beginning)
-    beginning = time.time()
-    if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
-        socle = makeSocle(delny,bounds)
-        mapped.append(mapping(socle))
-        print ("Socle : ", time.time()- beginning)
+    if (fic[-3:] != 'obj'):
+        delny = delaunay2D(fichier)
+        print ("Triangulation de Delaunay : ", time.time() -beginning)
         beginning = time.time()
+        mapped.append(mapping(delny))
+        print ("Mapping : ", time.time() -beginning)
+        beginning = time.time()
+        if (socleChoix == 1) : #faire le socle si l'utilisateur l'a demandé
+            socle = makeSocle(delny,bounds)
+            mapped.append(mapping(socle))
+            print ("Socle : ", time.time()- beginning)
+            beginning = time.time()
+    else:
+        mapped.append(mapping(fichier))
     rendered = rendering(mapped)
     print ("Rendering : ", time.time() -beginning)
     beginning = time.time()

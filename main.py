@@ -144,8 +144,8 @@ def viewOBJ_VTK():
         fic,lidar,id = BDDconnexion.get_file(OBJ_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
         fic = LOCAL_PATH + fic
     extension,go = test_format(fic)
-    print(extension)
     if (go):
+        lidar = False
         PDALtoVTK.pipeline_VTK(fic,lidar,2)
 
 
