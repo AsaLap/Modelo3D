@@ -170,6 +170,7 @@ def get_file(hostPath,localPath,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USE
                 fic = res[x][1]
         hostPath += "/" + fic
     elif (hostPath[-5:]=='STOCK'):
+        id = None
         shellCom = 'ls '+ hostPath
         stdin, stdout, stderr = ssh.exec_command(shellCom) #Envoie d'une commande "ls" pour afficher le contenu des répertoires
         print("\nListe des fichiers stockés sur la raspberry :")

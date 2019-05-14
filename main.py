@@ -123,16 +123,15 @@ def run_process():
     CSVFile,lidar,id = BDDconnexion.get_file(CSV_PATH,LOCAL_PATH,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     file = LOCAL_PATH + CSVFile
     socle = get_one_or_two("Voulez-vous ajouter un socle au traitement afin de l'imprimer en 3D par la suite ? (1 : Oui, 2 : Non) : ")
-    bounds = PDALtoVTK.pipeline_VTK(CSVFile,lidar,socle)
+    modulo = int(input("Quel modulo voulez-vous ? : "))
+    bounds = PDALtoVTK.pipeline_VTK(CSVFile,lidar,socle,modulo)
     query = "update csv set x_min = "+str(bounds[0])+", x_max = "+str(bounds[1])+", y_min = "+str(bounds[2])+", y_max = "+str(bounds[3])+", z_min = "+str(bounds[4])+", z_max = "+str(bounds[5])+" where id="+str(id)+";"
     print(query)
     BDDconnexion.make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
     choix = get_one_or_two("Voulez-vous enregistrer le rendu OBJ dans la base de données ? (1 : Oui, 2 : Non) : ")
     if (choix == 1):
         OBJFile = CSVFile[:-3] + 'obj'
-        print(OBJFile)
         entries = [str(id)]
-        print(entries)
         BDDconnexion.set_file(OBJFile,entries,OBJ_PATH,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT_SSH,PORT_POSTGRES,BDD_USER,BDD_PASSWORD,DATABASE)
 
 
@@ -223,13 +222,10 @@ def mode_libre():
                             arguments[1] = True
                         else:
                             arguments[1] = False
-                        print(arguments)
                         if (len(arguments) >= 3):
                             arguments[2] = int(arguments[2])
-                        print(arguments)
                         if (len(arguments) == 4):
                             arguments[3] = int(arguments[3])
-                        print("ok")
                         PDALtoVTK.pipeline_VTK(*arguments)
             else:
                 print("Fonction non reconnue...")
