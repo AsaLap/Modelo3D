@@ -109,18 +109,18 @@ def set_file(inputFile,entries,hostPath,IP_PUBLIQUE,IP_LOCALE,USER,PASSWORD,PORT
         scp.close()
         ssh.close()
     if (ajout_bdd):
-        try:
-            print("Ajout à la base de données...")
-            splitedFile = inputFile.split("/")
-            file = splitedFile[-1] #Récupération du nom de fichier uniquement
-            if (file[-3:]=="csv"):
-                query = "INSERT INTO csv(nom,ex_lidar,planete,commentaires) VALUES ('"+file+"',"+entries[0]+",'"+entries[1]+"','"+entries[2]+"') RETURNING id;"
-                make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
-            elif (file[-3:]=="obj"):
-                query = "INSERT INTO obj(id,nom) VALUES ("+entries[0]+",'"+file+"');"
-                make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
-            else:
-                print("Le stock n'est pas ajouté à la BDD")
+        # try:
+        print("Ajout à la base de données...")
+        splitedFile = inputFile.split("/")
+        file = splitedFile[-1] #Récupération du nom de fichier uniquement
+        if (file[-3:]=="csv"):
+            query = "INSERT INTO csv(nom,ex_lidar,planete,commentaires) VALUES ('"+file+"',"+entries[0]+",'"+entries[1]+"','"+entries[2]+"') RETURNING id;"
+            make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+        elif (file[-3:]=="obj"):
+            query = "INSERT INTO obj(id,nom) VALUES ("+entries[0]+",'"+file+"') RETURNING id;"
+            make_query(query,IP_PUBLIQUE,IP_LOCALE,PORT_SSH,PORT_POSTGRES,USER,PASSWORD,BDD_USER,BDD_PASSWORD,DATABASE)
+        else:
+            print("Le stock n'est pas ajouté à la BDD")
         except:
             print("Ajout à la base données échoué")
 
